@@ -1,0 +1,70 @@
+{
+  "typeName": "AWS::S3Outposts::Bucket",
+  "description": "Resource Type Definition for AWS::S3Outposts::Bucket",
+  "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-s3outposts.git",
+  "definitions": {
+    "Arn": {
+      "description": "The Amazon Resource Name (ARN) of the specified bucket.",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "Arn": {
+      "$ref": "#/definitions/Arn",
+      "examples": [
+        "arn:aws:s3-outposts:::mybucket"
+      ]
+    },
+    "BucketName": {
+      "description": "A name for the bucket. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the bucket name.",
+      "maxLength": 63,
+      "minLength": 3,
+      "pattern": "^[a-z0-9][a-z0-9//.//-]*[a-z0-9]$",
+      "type": "string"
+    },
+    "OutpostId": {
+      "description": "The id of the customer outpost on which the bucket resides.",
+      "pattern": "^(op-[a-f0-9]{17}|\\d{12}|ec2)$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "createOnlyProperties": [
+    "/properties/BucketName",
+    "/properties/OutpostId"
+  ],
+  "readOnlyProperties": [
+    "/properties/Arn"
+  ],
+  "primaryIdentifier": [
+    "/properties/Arn"
+  ],
+  "required": [
+    "OutpostId"
+  ],
+  "handlers": {
+    "create": {
+      "permissions": [
+        "s3-outposts:CreateBucket"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "s3-outposts:GetBucket"
+      ]
+    },
+    "update": {
+      "permissions": []
+    },
+    "delete": {
+      "permissions": [
+        "s3-outposts:DeleteBucket"
+      ]
+    },
+    "list": {
+      "permissions": [
+        "s3-outposts:ListRegionalBuckets"
+      ]
+    }
+  }
+}
