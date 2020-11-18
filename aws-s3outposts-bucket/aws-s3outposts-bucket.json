@@ -50,7 +50,8 @@
     },
     "read": {
       "permissions": [
-        "s3-outposts:GetBucket"
+        "s3-outposts:GetBucket",
+        "s3-outposts:ListRegionalBuckets"
       ]
     },
     "update": {

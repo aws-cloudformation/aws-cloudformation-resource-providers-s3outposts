@@ -1,43 +1,53 @@
 package software.amazon.s3outposts.bucket;
 
-import software.amazon.awssdk.awscore.AwsRequest;
-import software.amazon.awssdk.awscore.AwsResponse;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import com.google.common.collect.Lists;
+import software.amazon.awssdk.services.s3control.S3ControlClient;
+import software.amazon.awssdk.services.s3control.model.ListRegionalBucketsResponse;
+import software.amazon.cloudformation.proxy.*;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class ListHandler extends BaseHandler<CallbackContext> {
+public class ListHandler extends BaseHandlerStd {
+    private Logger logger;
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final ProxyClient<S3ControlClient> proxyClient,
+            final Logger logger) {
 
-        final List<ResourceModel> models = new ArrayList<>();
+        this.logger = logger;
+        final ResourceModel model = request.getDesiredResourceState();
 
-        // STEP 1 [TODO: construct a body of a request]
-        final AwsRequest awsRequest = Translator.translateToListRequest(request.getNextToken());
+        // Expecting customer to only provide the OutpostId
+        // Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/S3ControlClient.html#listRegionalBuckets-software.amazon.awssdk.services.s3control.model.ListRegionalBucketsRequest-
+        logger.log(String.format("ListHandler invoked Account: %s, OutpostId: %s",
+                request.getAwsAccountId(), model.getOutpostId()));
 
-        // STEP 2 [TODO: make an api call]
-        AwsResponse awsResponse = null; // proxy.injectCredentialsAndInvokeV2(awsRequest, ClientBuilder.getClient()::describeLogGroups);
-
-        // STEP 3 [TODO: get a token for the next page]
-        String nextToken = null;
-
-        // STEP 4 [TODO: construct resource models]
-        // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/master/aws-logs-loggroup/src/main/java/software/amazon/logs/loggroup/ListHandler.java#L19-L21
+//        try {
+        List<ResourceModel> models = Lists.newArrayList();
+        // Form ListRegionalBucketsRequest and make call to listRegionalBuckets
+        final ListRegionalBucketsResponse response = proxyClient.injectCredentialsAndInvokeV2(
+                Translator.translateToListRequest(model, request.getAwsAccountId(), request.getNextToken()),
+                proxyClient.client()::listRegionalBuckets);
+        // Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/model/ListRegionalBucketsResponse.html
+        response.regionalBucketList()
+                .stream()
+                .map(Translator::translateFromRegionalBucket)
+                .collect(Collectors.toCollection(() -> models));
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModels(models)
-            .nextToken(nextToken)
-            .status(OperationStatus.SUCCESS)
-            .build();
+                .resourceModels(models)
+                .status(OperationStatus.SUCCESS)
+                .nextToken(response.nextToken())
+                .build();
+//        } catch (Exception exception) {
+//            logger.log(String.format("Error Type: %s", exception.getClass().getCanonicalName()));
+//            return handleException(exception, logger);
+//        }
+
     }
 }
