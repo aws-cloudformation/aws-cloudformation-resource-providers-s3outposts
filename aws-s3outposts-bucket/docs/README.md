@@ -41,7 +41,7 @@ _Minimum_: <code>3</code>
 
 _Maximum_: <code>63</code>
 
-_Pattern_: <code>^[a-z0-9][a-z0-9//.//-]*[a-z0-9]$</code>
+_Pattern_: <code>(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)</code>
 
 _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
 
@@ -49,7 +49,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 The id of the customer outpost on which the bucket resides.
 
-_Required_: Yes
+_Required_: No
 
 _Type_: String
 

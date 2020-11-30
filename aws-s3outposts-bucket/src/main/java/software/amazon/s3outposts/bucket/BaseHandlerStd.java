@@ -66,7 +66,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             }
         } catch (SdkException e) {
             logger.log(String.format("Got error of type %s", e.getClass().getCanonicalName()));
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.GeneralServiceException);
+            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.NotFound);
         }
     }
 }

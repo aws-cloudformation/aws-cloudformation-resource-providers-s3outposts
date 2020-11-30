@@ -1,0 +1,5 @@
+{
+  "Arn": "arn:aws:s3-outposts:us-east-1:840795623646:outpost/739353813569/bucket/cfn-bucket1",
+  "BucketName": "cfn-bucket1",
+  "OutpostId": "739353813569"
+}

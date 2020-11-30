@@ -22,7 +22,7 @@ public class CreateHandler extends BaseHandlerStd {
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> {
-                    logger.log(String.format("CreateHandler called:  BucketName: %s, OutpostId: %s", model.getBucketName(), model.getOutpostId()));
+                    logger.log(String.format("CreateHandler -  BucketName: %s, OutpostId: %s", model.getBucketName(), model.getOutpostId()));
                     // Initiate callGraph and get the callContext
                     return proxy.initiate("AWS-S3Outposts-Bucket::Create", proxyClient, model, callbackContext)
                             // Form CreateBucketRequest
@@ -36,10 +36,11 @@ public class CreateHandler extends BaseHandlerStd {
 //                                return true;
 //                            })
                             .handleError((createBucketRequest, exception, s3ControlClientProxy, resourceModel, cbContext) -> {
-                                logger.log(String.format("Error Type: %s", exception.getClass().getCanonicalName()));
+                                logger.log(String.format("CreateHandler - Error Type: %s", exception.getClass().getCanonicalName()));
                                 return handleException(exception, logger);
                             })
                             .done((createBucketResponse) -> {
+                                logger.log(String.format("CreateHandler - Bucket created with ARN: %s", createBucketResponse.bucketArn()));
                                 // Set the primary identifier i.e. Arn
                                 model.setArn(createBucketResponse.bucketArn());
                                 return ProgressEvent.progress(model, progress.getCallbackContext());

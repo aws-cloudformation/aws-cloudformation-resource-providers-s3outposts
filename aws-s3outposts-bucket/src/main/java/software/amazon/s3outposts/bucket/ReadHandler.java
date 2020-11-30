@@ -18,17 +18,23 @@ public class ReadHandler extends BaseHandlerStd {
 
         // Expecting customer to only provide the Arn.
         // Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/S3ControlClient.html#getBucket-software.amazon.awssdk.services.s3control.model.GetBucketRequest-
+        if (model.getArn() != null) {
+            logger.log(String.format("ReadHandler - Arn: %s \n", model.getArn()));
+        } else {
+            logger.log("ReadHandler - Arn is null");
+        }
 
         // Initiate the callGraph and get the callContext
         return proxy.initiate("AWS-S3Outposts-Bucket::Read", proxyClient, model, callbackContext)
                 // Form GetBucketRequest
-                .translateToServiceRequest(Translator::translateToReadRequest)
+                .translateToServiceRequest(resourceModel -> Translator.translateToReadRequest(resourceModel, request.getAwsAccountId()))
                 // Issue call getBucket
-                .makeServiceCall((getBucketRequest, s3ControlClientProxyClient) ->
-                        s3ControlClientProxyClient.injectCredentialsAndInvokeV2(getBucketRequest, s3ControlClientProxyClient.client()::getBucket)
-                )
+                .makeServiceCall((getBucketRequest, s3ControlClientProxyClient) -> {
+                    logger.log(String.format("ReadHandler -  AccountId: %s, ARN: %s", getBucketRequest.accountId(), getBucketRequest.bucket()));
+                    return s3ControlClientProxyClient.injectCredentialsAndInvokeV2(getBucketRequest, s3ControlClientProxyClient.client()::getBucket);
+                })
                 .handleError((getBucketRequest, exception, proxyInvocation, resourceModel, cbContext) -> {
-                    logger.log(String.format("Error Type: %s", exception.getClass().getCanonicalName()));
+                    logger.log(String.format("ReadHandler - Error Type: %s", exception.getClass().getCanonicalName()));
                     return handleException(exception, logger);
                 })
                 .done(getBucketResponse -> ProgressEvent.defaultSuccessHandler(

@@ -2,24 +2,20 @@
   "typeName": "AWS::S3Outposts::Bucket",
   "description": "Resource Type Definition for AWS::S3Outposts::Bucket",
   "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-s3outposts.git",
-  "definitions": {
-    "Arn": {
-      "description": "The Amazon Resource Name (ARN) of the specified bucket.",
-      "type": "string"
-    }
-  },
+  "definitions": {},
   "properties": {
     "Arn": {
-      "$ref": "#/definitions/Arn",
-      "examples": [
-        "arn:aws:s3-outposts:::mybucket"
-      ]
+      "description": "The Amazon Resource Name (ARN) of the specified bucket.",
+      "maxLength": 2048,
+      "minLength": 20,
+      "pattern": "^arn:[^:]+:s3-outposts:[a-zA-Z0-9\\-]+:\\d{12}:outpost\\/[^:]+\\/bucket\\/[^:]+$",
+      "type": "string"
     },
     "BucketName": {
       "description": "A name for the bucket. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the bucket name.",
       "maxLength": 63,
       "minLength": 3,
-      "pattern": "^[a-z0-9][a-z0-9//.//-]*[a-z0-9]$",
+      "pattern": "(?=^.{3,63}$)(?!^(\\d+\\.)+\\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$)",
       "type": "string"
     },
     "OutpostId": {
@@ -39,9 +35,7 @@
   "primaryIdentifier": [
     "/properties/Arn"
   ],
-  "required": [
-    "OutpostId"
-  ],
+  "required": [],
   "handlers": {
     "create": {
       "permissions": [

@@ -27,7 +27,6 @@ public class ListHandler extends BaseHandlerStd {
         logger.log(String.format("ListHandler invoked Account: %s, OutpostId: %s",
                 request.getAwsAccountId(), model.getOutpostId()));
 
-//        try {
         List<ResourceModel> models = Lists.newArrayList();
         // Form ListRegionalBucketsRequest and make call to listRegionalBuckets
         final ListRegionalBucketsResponse response = proxyClient.injectCredentialsAndInvokeV2(
@@ -36,7 +35,7 @@ public class ListHandler extends BaseHandlerStd {
         // Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/model/ListRegionalBucketsResponse.html
         response.regionalBucketList()
                 .stream()
-                .map(Translator::translateFromRegionalBucket)
+                .map(regionalBucket -> Translator.translateFromRegionalBucket(regionalBucket, model))
                 .collect(Collectors.toCollection(() -> models));
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -44,10 +43,6 @@ public class ListHandler extends BaseHandlerStd {
                 .status(OperationStatus.SUCCESS)
                 .nextToken(response.nextToken())
                 .build();
-//        } catch (Exception exception) {
-//            logger.log(String.format("Error Type: %s", exception.getClass().getCanonicalName()));
-//            return handleException(exception, logger);
-//        }
 
     }
 }

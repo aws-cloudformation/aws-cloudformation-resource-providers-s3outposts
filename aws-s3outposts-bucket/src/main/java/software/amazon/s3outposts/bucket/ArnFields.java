@@ -19,6 +19,11 @@ public class ArnFields {
     }
 
     protected static ArnFields splitArn(final String arn) {
+
+        if (arn == null) {
+            return new ArnFields();
+        }
+
         // An arn for S3Outposts service looks like:
         // arn:aws:s3-outposts:us-west-2:12345:outpost/op-12345/bucket/my-bucket
 

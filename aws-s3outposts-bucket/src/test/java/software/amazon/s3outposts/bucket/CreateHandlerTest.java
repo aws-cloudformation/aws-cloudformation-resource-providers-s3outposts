@@ -23,13 +23,6 @@ public class CreateHandlerTest extends AbstractTestBase {
     private ResourceHandlerRequest<ResourceModel> request;
 
     // Constants
-    private static final String REGION = "us-east-1";
-    private static final String ACCOUNT_ID = "12345789012";
-    private static final String OUTPOST_ID = "op-12345678901234";
-    private static final String BUCKET_NAME = "bucket1";
-
-    private static final String ARN =
-            String.format("arn:aws:s3-outposts:%s:%s:outpost/%s/bucket/%s", REGION, ACCOUNT_ID, OUTPOST_ID, BUCKET_NAME);
     private static final ResourceModel CREATE_BUCKET_MODEL = ResourceModel.builder()
             .bucketName(BUCKET_NAME)
             .outpostId(OUTPOST_ID)
