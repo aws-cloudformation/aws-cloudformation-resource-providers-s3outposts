@@ -8,6 +8,8 @@ import software.amazon.cloudformation.proxy.*;
 // Placeholder for the functionality that could be shared across Create/Read/Update/Delete/List Handlers
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+    protected static final int CALLBACK_DELAY_SECONDS = 30;
+
     @Override
     public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -68,5 +70,14 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             logger.log(String.format("Got error of type %s", e.getClass().getCanonicalName()));
             return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.NotFound);
         }
+    }
+
+    protected static ProgressEvent<ResourceModel, CallbackContext> propagate(final ProgressEvent<ResourceModel,
+            CallbackContext> progressEvent, Logger logger) {
+        final CallbackContext callbackContext = progressEvent.getCallbackContext();
+        logger.log(String.format("Waiting for propagation delay.. %s", callbackContext.isPropagated()));
+        if (callbackContext.isPropagated()) return progressEvent;
+        callbackContext.setPropagated(true);
+        return ProgressEvent.defaultInProgressHandler(callbackContext, CALLBACK_DELAY_SECONDS, progressEvent.getResourceModel());
     }
 }

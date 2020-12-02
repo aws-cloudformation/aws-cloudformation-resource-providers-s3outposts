@@ -32,6 +32,9 @@ public class CreateHandler extends BaseHandlerStd {
                                     s3ControlClientProxyClient.injectCredentialsAndInvokeV2(createBucketRequest, s3ControlClientProxyClient.client()::createBucket)
                             )
 //                            .stabilize((createBucketRequest, createBucketResponse, s3ControlClientProxyClient, resourceModel, cbContext) -> {
+//                                logger.log(String.format("Check for stabilization after CreateBucket - %s", callbackContext.isPropagated()));
+//                                if (callbackContext.isPropagated()) return callbackContext.isPropagated();
+//                                callbackContext.setPropagated(true);
 //                                resourceModel.setArn(createBucketResponse.bucketArn());
 //                                return true;
 //                            })
@@ -44,8 +47,10 @@ public class CreateHandler extends BaseHandlerStd {
                                 // Set the primary identifier i.e. Arn
                                 model.setArn(createBucketResponse.bucketArn());
                                 return ProgressEvent.progress(model, progress.getCallbackContext());
+//                                return ProgressEvent.defaultInProgressHandler(progress.getCallbackContext(), CALLBACK_DELAY_SECONDS, model);
                             });
                 })
+                .then(progress -> BaseHandlerStd.propagate(progress, logger))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 }
