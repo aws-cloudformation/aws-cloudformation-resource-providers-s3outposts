@@ -61,21 +61,24 @@ public class CreateHandlerTest extends AbstractTestBase {
         final CreateBucketResponse createBucketResponse = CreateBucketResponse.builder().bucketArn(ARN).build();
         when(proxyClient.client().createBucket(any(CreateBucketRequest.class))).thenReturn(createBucketResponse);
 
+//        CallbackContext context = new CallbackContext();
+//        context.setPropagated(true);
+
 //        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
 //        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
+        final ProgressEvent<ResourceModel, CallbackContext> progressEvent =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
-        assertThat(response).isNotNull();
-//        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
-//        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(30);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
+        assertThat(progressEvent).isNotNull();
+//        assertThat(progressEvent.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progressEvent.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
+        assertThat(progressEvent.getCallbackDelaySeconds()).isEqualTo(20);
+//        assertThat(response.getCallbackDelaySeconds()).isEqualTo(30);
+        assertThat(progressEvent.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(progressEvent.getResourceModels()).isNull();
+        assertThat(progressEvent.getMessage()).isNull();
+        assertThat(progressEvent.getErrorCode()).isNull();
 
         verify(proxyClient.client()).createBucket(any(CreateBucketRequest.class));
     }

@@ -8,7 +8,7 @@ import software.amazon.cloudformation.proxy.*;
 // Placeholder for the functionality that could be shared across Create/Read/Update/Delete/List Handlers
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
-    protected static final int CALLBACK_DELAY_SECONDS = 30;
+    protected static final int CALLBACK_DELAY_SECONDS = 20;
 
     @Override
     public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -75,9 +75,12 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected static ProgressEvent<ResourceModel, CallbackContext> propagate(final ProgressEvent<ResourceModel,
             CallbackContext> progressEvent, Logger logger) {
         final CallbackContext callbackContext = progressEvent.getCallbackContext();
-        logger.log(String.format("Waiting for propagation delay.. %s", callbackContext.isPropagated()));
+        logger.log(String.format("Waiting for propagation delay.. Count: %d, Propagated: %s", callbackContext.forcedDelayCount, callbackContext.isPropagated()));
         if (callbackContext.isPropagated()) return progressEvent;
-        callbackContext.setPropagated(true);
+        callbackContext.forcedDelayCount++;
+        if (callbackContext.forcedDelayCount == 2) {
+            callbackContext.setPropagated(true);
+        }
         return ProgressEvent.defaultInProgressHandler(callbackContext, CALLBACK_DELAY_SECONDS, progressEvent.getResourceModel());
     }
 }
