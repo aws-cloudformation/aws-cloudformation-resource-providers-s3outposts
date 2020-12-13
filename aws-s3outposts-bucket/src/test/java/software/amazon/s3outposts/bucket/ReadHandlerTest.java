@@ -25,14 +25,6 @@ public class ReadHandlerTest extends AbstractTestBase {
     private ResourceHandlerRequest<ResourceModel> request;
 
     // Constants
-//    private static final String REGION = "us-east-1";
-//    private static final String ACCOUNT_ID = "12345789012";
-//    private static final String OUTPOST_ID = "op-12345678901234";
-//    private static final String BUCKET_NAME = "bucket1";
-//
-//    private static final String ARN =
-//            String.format("arn:aws:s3-outposts:%s:%s:outpost/%s/bucket/%s", REGION, ACCOUNT_ID, OUTPOST_ID, BUCKET_NAME);
-
     private static final ResourceModel REQUEST_SUCCESS_MODEL = ResourceModel.builder()
             .arn(ARN)
             .build();
@@ -71,6 +63,7 @@ public class ReadHandlerTest extends AbstractTestBase {
     // Tests
     @Test
     public void handleRequest_SimpleSuccess() {
+
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(REQUEST_SUCCESS_MODEL)
                 .build();
@@ -80,8 +73,6 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
-
-        logger.log(String.format("ServiceName: %s", sdkClient.serviceName()));
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -93,10 +84,12 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+
     }
 
     @Test
     public void handleRequest_NotFound() {
+
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(REQUEST_SUCCESS_MODEL)
                 .build();
@@ -110,17 +103,18 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+
     }
 
     @Test
     public void handleRequest_400() {
+
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(REQUEST_SUCCESS_MODEL)
                 .build();
@@ -134,17 +128,18 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+
     }
 
     @Test
     public void handleRequest_404() {
+
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(REQUEST_SUCCESS_MODEL)
                 .build();
@@ -158,12 +153,12 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+
     }
 }

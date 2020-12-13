@@ -39,17 +39,19 @@
   "handlers": {
     "create": {
       "permissions": [
-        "s3-outposts:CreateBucket"
+        "s3-outposts:CreateBucket",
+        "s3-outposts:GetBucket"
       ]
     },
     "read": {
       "permissions": [
-        "s3-outposts:GetBucket",
-        "s3-outposts:ListRegionalBuckets"
+        "s3-outposts:GetBucket"
       ]
     },
     "update": {
-      "permissions": []
+      "permissions": [
+        "s3-outposts:GetBucket"
+      ]
     },
     "delete": {
       "permissions": [

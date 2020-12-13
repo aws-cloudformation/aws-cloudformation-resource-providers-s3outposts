@@ -23,6 +23,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
     private UpdateHandler handler;
     private ResourceHandlerRequest<ResourceModel> request;
 
+    // Constants
     private static final ResourceModel UPDATE_SUCCESS_MODEL = ResourceModel.builder()
             .arn(ARN)
             .bucketName(BUCKET_NAME)
@@ -64,8 +65,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void tear_down() {
-//        verify(sdkClient, atLeastOnce()).serviceName();
-//        verifyNoMoreInteractions(sdkClient);
+        verify(sdkClient, atLeastOnce()).serviceName();
+        verifyNoMoreInteractions(sdkClient);
     }
 
     @Test
@@ -93,48 +94,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     }
 
-//    @Test
-//    public void handleRequest_BucketError() {
-//
-//        request = ResourceHandlerRequest.<ResourceModel>builder()
-//                .desiredResourceState(BUCKET_ERROR_MODEL)
-//                .previousResourceState(UPDATE_SUCCESS_MODEL)
-//                .build();
-//
-//        final ProgressEvent<ResourceModel, CallbackContext> response =
-//                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
-//
-//        assertThat(response).isNotNull();
-//        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-//        assertThat(response.getCallbackContext()).isNull();
-//        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-//        assertThat(response.getResourceModels()).isNull();
-//        assertThat(response.getMessage()).isEqualTo("Resource of type 'AWS::S3Outposts::Bucket' with identifier 'bucket-1' is not updatable with parameters provided.");
-//        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotUpdatable);
-////        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
-//    }
-//
-//    @Test
-//    public void handleRequest_OutpostError() {
-//
-//        request = ResourceHandlerRequest.<ResourceModel>builder()
-//                .desiredResourceState(OUTPOST_ERROR_MODEL)
-//                .previousResourceState(UPDATE_SUCCESS_MODEL)
-//                .build();
-//
-//        final ProgressEvent<ResourceModel, CallbackContext> response =
-//                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
-//
-//        assertThat(response).isNotNull();
-//        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-//        assertThat(response.getCallbackContext()).isNull();
-//        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-//        assertThat(response.getResourceModels()).isNull();
-//        assertThat(response.getMessage()).isEqualTo("Resource of type 'AWS::S3Outposts::Bucket' with identifier 'op-98765432109876' is not updatable with parameters provided.");
-//        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotUpdatable);
-////        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
-//    }
-
     @Test
     public void handleRequest_GetError() {
 
@@ -143,24 +102,19 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .previousResourceState(UPDATE_SUCCESS_MODEL)
                 .build();
 
-        CallbackContext context = new CallbackContext();
-        context.setPropagated(true);
-        context.setForcedDelayCount(2);
-
-
         when(proxyClient.client().getBucket(any(GetBucketRequest.class)))
                 .thenThrow(NotFoundException.class);
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
-                handler.handleRequest(proxy, request, context, proxyClient, logger);
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+
     }
 }

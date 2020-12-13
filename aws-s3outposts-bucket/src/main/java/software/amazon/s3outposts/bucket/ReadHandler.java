@@ -23,27 +23,19 @@ public class ReadHandler extends BaseHandlerStd {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, BUCKET_ARN_REQD);
         }
 
-//        logger.log(String.format("ReadHandler - Arn: %s \n", model.getArn()));
-//        logger.log(String.format("Timestamp1: %s",System.currentTimeMillis()));
-
         // Initiate the callGraph and get the callContext
         return proxy.initiate("AWS-S3Outposts-Bucket::Read", proxyClient, model, callbackContext)
                 // Form GetBucketRequest
                 .translateToServiceRequest(resourceModel -> Translator.translateToReadRequest(resourceModel, request.getAwsAccountId()))
                 // Issue call getBucket
-                .makeServiceCall((getBucketRequest, s3ControlProxyClient) -> {
-//                    logger.log(String.format("Timestamp2: %s",System.currentTimeMillis()));
-//                    logger.log(String.format("ReadHandler -  AccountId: %s, ARN: %s", getBucketRequest.accountId(), getBucketRequest.bucket()));
-                    return s3ControlProxyClient.injectCredentialsAndInvokeV2(getBucketRequest, s3ControlProxyClient.client()::getBucket);
-                })
+                .makeServiceCall((getBucketRequest, s3ControlProxyClient) ->
+                        s3ControlProxyClient.injectCredentialsAndInvokeV2(getBucketRequest, s3ControlProxyClient.client()::getBucket)
+                )
                 .handleError((getBucketRequest, exception, s3ControlProxyClient, resourceModel, cbContext) -> {
-//                    logger.log(String.format("Timestamp3: %s",System.currentTimeMillis()));
                     logger.log(String.format("%s - ReadHandler - Error Type: %s", ResourceModel.TYPE_NAME, exception.getClass().getCanonicalName()));
                     return handleError(getBucketRequest, exception, s3ControlProxyClient, resourceModel, cbContext);
-//                    return handleException(exception, logger);
                 })
                 .done(getBucketResponse -> {
-                    logger.log(String.format("Timestamp3: %s", System.currentTimeMillis()));
                     return ProgressEvent.defaultSuccessHandler(
                             // We send the Arn since the GetBucketResponse doesn't contain the Arn
                             Translator.translateFromReadResponse(getBucketResponse, model.getArn())

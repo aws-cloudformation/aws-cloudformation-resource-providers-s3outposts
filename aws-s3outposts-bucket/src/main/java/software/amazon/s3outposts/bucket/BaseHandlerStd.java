@@ -12,6 +12,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected static final String BUCKET_ARN_REQD = "Bucket ARN is required.";
     protected static final String OUTPOSTID_REQD = "OutpostId is required.";
 
+    // Constants
     protected static final int CALLBACK_DELAY_SECONDS = 20;
 
     @Override
@@ -38,6 +39,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
     /**
      * Common error handling function. It is used by all handlers.
+     *
      * @param request
      * @param exception
      * @param proxyClient
@@ -91,49 +93,9 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         }
     }
 
-    protected ProgressEvent<ResourceModel, CallbackContext> handleException(Exception exception, Logger logger) throws Exception {
-        try {
-            throw exception;
-        } catch (BadRequestException | InvalidRequestException e) {
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.InvalidRequest);
-        } catch (BucketAlreadyExistsException | BucketAlreadyOwnedByYouException e) {
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.AlreadyExists);
-        } catch (InternalServiceException e) {
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.ServiceInternalError);
-        } catch (InvalidNextTokenException e) {
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.GeneralServiceException);
-        } catch (NotFoundException e) {
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.NotFound);
-        } catch (TooManyRequestsException e) {
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.Throttling);
-        } catch (TooManyTagsException e) {
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.ServiceLimitExceeded);
-        } catch (S3ControlException e) {
-            switch (e.statusCode()) {
-                case 400:
-                    return ProgressEvent.defaultFailureHandler(exception, HandlerErrorCode.InvalidRequest);
-                case 403:
-                    return ProgressEvent.defaultFailureHandler(exception, HandlerErrorCode.AccessDenied);
-                case 404:
-                    return ProgressEvent.defaultFailureHandler(exception, HandlerErrorCode.NotFound);
-                case 409:
-                    return ProgressEvent.defaultFailureHandler(exception, HandlerErrorCode.ResourceConflict);
-                case 500:
-                    return ProgressEvent.defaultFailureHandler(exception, HandlerErrorCode.ServiceInternalError);
-                case 503:
-                    return ProgressEvent.defaultFailureHandler(exception, HandlerErrorCode.Throttling);
-                default:
-                    return ProgressEvent.defaultFailureHandler(exception, HandlerErrorCode.GeneralServiceException);
-            }
-        } catch (SdkException e) {
-            logger.log(String.format("Got error of type %s", e.getClass().getCanonicalName()));
-//            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.NotFound);
-            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.GeneralServiceException);
-        }
-    }
-
     /**
      * Adds a delay of 40s to allow the Bucket state to transition from "Associated" to "Active".
+     *
      * @param progressEvent
      * @param logger
      * @return

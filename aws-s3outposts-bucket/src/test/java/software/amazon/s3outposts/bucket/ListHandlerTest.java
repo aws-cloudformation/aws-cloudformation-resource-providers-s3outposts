@@ -80,12 +80,12 @@ public class ListHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void tear_down() {
-//        verify(sdkClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(sdkClient);
     }
 
     @Test
     public void handleRequest_SimpleSuccess() {
+
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(REQUEST_MODEL)
                 .build();
@@ -111,20 +111,16 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getNextToken()).isNull();
 
         verify(proxyClient.client()).listRegionalBuckets(any(ListRegionalBucketsRequest.class));
+
     }
 
     @Test
     public void handleRequest_NoOutpostId() {
+
         ResourceModel model = ResourceModel.builder().build();
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
                 .build();
-
-//        final ListRegionalBucketsResponse listRegionalBucketsResponse =
-//                ListRegionalBucketsResponse.builder()
-//                        .regionalBucketList(Lists.newArrayList(regionalBucket1, regionalBucket2))
-//                        .build();
-//        when(proxyClient.client().listRegionalBuckets(any(ListRegionalBucketsRequest.class))).thenReturn(listRegionalBucketsResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -143,6 +139,7 @@ public class ListHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_Exception() {
+
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(REQUEST_MODEL)
                 .build();
@@ -161,7 +158,8 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
         assertThat(response.getNextToken()).isNull();
+
+        verify(proxyClient.client()).listRegionalBuckets(any(ListRegionalBucketsRequest.class));
+
     }
-
-
 }
