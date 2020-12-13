@@ -26,13 +26,14 @@ public class DeleteHandlerTest extends AbstractTestBase {
     private ResourceHandlerRequest<ResourceModel> request;
 
     // Constants
-    private static final String REGION = "us-east-1";
-    private static final String ACCOUNT_ID = "12345789012";
-    private static final String OUTPOST_ID = "op-12345678901234";
-    private static final String BUCKET_NAME = "bucket1";
+//    private static final String REGION = "us-east-1";
+//    private static final String ACCOUNT_ID = "12345789012";
+//    private static final String OUTPOST_ID = "op-12345678901234";
+//    private static final String BUCKET_NAME = "bucket1";
+//
+//    private static final String ARN =
+//            String.format("arn:aws:s3-outposts:%s:%s:outpost/%s/bucket/%s", REGION, ACCOUNT_ID, OUTPOST_ID, BUCKET_NAME);
 
-    private static final String ARN =
-            String.format("arn:aws:s3-outposts:%s:%s:outpost/%s/bucket/%s", REGION, ACCOUNT_ID, OUTPOST_ID, BUCKET_NAME);
     private static final ResourceModel DELETE_SUCCESS_MODEL = ResourceModel.builder()
             .arn(ARN)
             .build();
@@ -58,7 +59,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void tear_down() {
-        verify(sdkClient, atLeastOnce()).serviceName();
+//        verify(sdkClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(sdkClient);
     }
 
@@ -82,6 +83,28 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_NoArn() {
+        ResourceModel model = ResourceModel.builder().build();
+        request = ResourceHandlerRequest.<ResourceModel>builder().desiredResourceState(model).build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+//        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isEqualTo("Bucket ARN is required.");
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+
+//        verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
+//        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
     // Ref: https://code.amazon.com/packages/SeaportAgent/blobs/mainline-1.1/--/cmd/api-errors_test.go
@@ -97,13 +120,16 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
     }
 
     @Test
@@ -118,13 +144,15 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -140,13 +168,15 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isEqualTo("BucketNotEmpty");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ResourceConflict);
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -162,13 +192,15 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isEqualTo("InvalidBucketState");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ResourceConflict);
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -184,12 +216,14 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+//        assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isEqualTo("NoSuchBucket");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
     }
 }

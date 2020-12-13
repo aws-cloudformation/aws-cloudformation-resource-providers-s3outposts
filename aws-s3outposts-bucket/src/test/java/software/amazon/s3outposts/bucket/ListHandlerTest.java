@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.s3control.S3ControlClient;
 import software.amazon.awssdk.services.s3control.model.ListRegionalBucketsRequest;
 import software.amazon.awssdk.services.s3control.model.ListRegionalBucketsResponse;
 import software.amazon.awssdk.services.s3control.model.RegionalBucket;
+import software.amazon.awssdk.services.s3control.model.S3ControlException;
 import software.amazon.cloudformation.proxy.*;
 
 import java.time.Duration;
@@ -111,4 +112,56 @@ public class ListHandlerTest extends AbstractTestBase {
 
         verify(proxyClient.client()).listRegionalBuckets(any(ListRegionalBucketsRequest.class));
     }
+
+    @Test
+    public void handleRequest_NoOutpostId() {
+        ResourceModel model = ResourceModel.builder().build();
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+
+//        final ListRegionalBucketsResponse listRegionalBucketsResponse =
+//                ListRegionalBucketsResponse.builder()
+//                        .regionalBucketList(Lists.newArrayList(regionalBucket1, regionalBucket2))
+//                        .build();
+//        when(proxyClient.client().listRegionalBuckets(any(ListRegionalBucketsRequest.class))).thenReturn(listRegionalBucketsResponse);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isEqualTo("OutpostId is required.");
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThat(response.getNextToken()).isNull();
+
+    }
+
+    @Test
+    public void handleRequest_Exception() {
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQUEST_MODEL)
+                .build();
+
+        when(proxyClient.client().listRegionalBuckets(any(ListRegionalBucketsRequest.class))).thenThrow(S3ControlException.builder().build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
+        assertThat(response.getNextToken()).isNull();
+    }
+
+
 }
