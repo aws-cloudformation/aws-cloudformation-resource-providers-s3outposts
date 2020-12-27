@@ -35,7 +35,10 @@
   "primaryIdentifier": [
     "/properties/Arn"
   ],
-  "required": [],
+  "required": [
+    "BucketName",
+    "OutpostId"
+  ],
   "handlers": {
     "create": {
       "permissions": [

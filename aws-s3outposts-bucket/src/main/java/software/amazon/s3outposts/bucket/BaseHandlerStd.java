@@ -10,6 +10,7 @@ import software.amazon.cloudformation.proxy.*;
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     // Error messages (returned to customer)
     protected static final String BUCKET_ARN_REQD = "Bucket ARN is required.";
+    protected static final String BUCKET_NAME_REQD = "Bucket Name is required.";
     protected static final String OUTPOSTID_REQD = "OutpostId is required.";
 
     // Constants

@@ -33,7 +33,7 @@ Properties:
 
 A name for the bucket. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the bucket name.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 
@@ -49,7 +49,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 The id of the customer outpost on which the bucket resides.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 

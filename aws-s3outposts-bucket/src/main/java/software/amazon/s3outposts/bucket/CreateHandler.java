@@ -21,8 +21,14 @@ public class CreateHandler extends BaseHandlerStd {
 
         // Expecting customer to provide 2 parameters: BucketName and OutpostId.
         // JavaSDK: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/S3ControlClient.html#createBucket-software.amazon.awssdk.services.s3control.model.CreateBucketRequest-
-        // If a BucketName is not provided, we will generate a BucketName for the customer.
-        // However, the OutpostId is required.
+        // We will not generate a BucketName for S3Outposts buckets if the user does not provide a name because:
+        // - There is no guarantee that the generated name will meet the regex requirements for our bucket name.
+        // - BucketName is a `required` field in our JSON model (aws-s3outposts-bucket.json). If the user does not provide
+        //   a BucketName, the framework will fail the request prior to it reaching the handler.
+        if (StringUtils.isEmpty(model.getBucketName())) {
+            return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, BUCKET_NAME_REQD);
+        }
+
         if (StringUtils.isEmpty(model.getOutpostId())) {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, OUTPOSTID_REQD);
         }
@@ -30,17 +36,7 @@ public class CreateHandler extends BaseHandlerStd {
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> proxy.initiate("AWS-S3Outposts-Bucket::Create", proxyClient, model, callbackContext)
                         // Form CreateBucketRequest
-                        .translateToServiceRequest(resourceModel -> {
-                            // Generate bucket name if empty
-                            if (StringUtils.isEmpty(resourceModel.getBucketName())) {
-                                final String bucketName = IdentifierUtils.generateResourceIdentifier(
-                                        request.getLogicalResourceIdentifier(),
-                                        request.getClientRequestToken()).toLowerCase();
-                                logger.log(String.format("Generated bucket name: %s", bucketName));
-                                resourceModel.setBucketName(bucketName);
-                            }
-                            return Translator.translateToCreateRequest(resourceModel);
-                        })
+                        .translateToServiceRequest(Translator::translateToCreateRequest)
                         // Issue call createBucket
                         .makeServiceCall((createBucketRequest, s3ControlProxyClient) ->
                                 s3ControlProxyClient.injectCredentialsAndInvokeV2(createBucketRequest, s3ControlProxyClient.client()::createBucket)
