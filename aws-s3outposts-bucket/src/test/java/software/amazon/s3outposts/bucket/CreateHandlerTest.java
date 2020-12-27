@@ -121,39 +121,25 @@ public class CreateHandlerTest extends AbstractTestBase {
 
     }
 
+
     @Test
     public void handleRequest_Success_NoBucketName() {
 
-        request = ResourceHandlerRequest.<ResourceModel>builder().desiredResourceState(CREATE_NOBUCKETNAME_MODEL)
-                .logicalResourceIdentifier("CFN-withoutBucketName")
-                .clientRequestToken("12345678-1234-1234-1234-123456789012")
-                .build();
-
-        final String ARN_NOBUCKET =
-                String.format("arn:aws:s3-outposts:%s:%s:outpost/%s/bucket/%s", REGION, ACCOUNT_ID, OUTPOST_ID, "cfn-withoutbucketname-amf6gnser0qt");
-
-        final CreateBucketResponse createBucketResponse = CreateBucketResponse.builder().bucketArn(ARN_NOBUCKET).build();
-        when(proxyClient.client().createBucket(any(CreateBucketRequest.class))).thenReturn(createBucketResponse);
+        request = ResourceHandlerRequest.<ResourceModel>builder().desiredResourceState(CREATE_NOBUCKETNAME_MODEL).build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progressEvent =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
         assertThat(progressEvent).isNotNull();
-        assertThat(progressEvent.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
-        assertThat(progressEvent.getCallbackContext().stabilized).isEqualTo(true);
-        assertThat(progressEvent.getCallbackContext().propagated).isEqualTo(false);
-        assertThat(progressEvent.getCallbackContext().forcedDelayCount).isEqualTo(1);
-        assertThat(progressEvent.getCallbackDelaySeconds()).isEqualTo(20);
-        assertThat(progressEvent.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(progressEvent.getResourceModel().getArn()).isEqualTo(ARN_NOBUCKET);
+        assertThat(progressEvent.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progressEvent.getCallbackContext()).isEqualToComparingFieldByField(new CallbackContext());
+        assertThat(progressEvent.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(progressEvent.getResourceModels()).isNull();
-        assertThat(progressEvent.getMessage()).isNull();
-        assertThat(progressEvent.getErrorCode()).isNull();
-
-        verify(proxyClient.client()).createBucket(any(CreateBucketRequest.class));
-        verify(sdkClient, atLeastOnce()).serviceName();
+        assertThat(progressEvent.getMessage()).isEqualTo("Bucket Name is required.");
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
 
     }
+
 
     @Test
     public void handleRequest_Success_NoOutpostId() {

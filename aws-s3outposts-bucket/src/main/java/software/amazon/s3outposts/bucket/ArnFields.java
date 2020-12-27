@@ -24,7 +24,7 @@ public class ArnFields {
             return new ArnFields();
         }
 
-        // An arn for S3Outposts service looks like:
+        // An arn for a S3Outposts bucket looks like:
         // arn:aws:s3-outposts:us-west-2:12345:outpost/op-12345/bucket/my-bucket
 
         // Split the ARN into 2 parts:
@@ -33,14 +33,14 @@ public class ArnFields {
         String parts[] = arn.split(":outpost/");
 
         // Extract region and accountId from part1
-        // part1: arn:aws:s3-outposts:us-west-2:12345
         //        [0]:[1]:    [2]    :  [3]    :  [4]
+        // part1: arn:aws:s3-outposts:us-west-2:12345
         String region = parts[0].split(":")[3];
         String accountId = parts[0].split(":")[4];
 
         // Extract outpostId and bucket from part2
-        // part2: op-12345/bucket/my-bucket
         //          [0]   /bucket/   [1]
+        // part2: op-12345/bucket/my-bucket
         String outpostId = parts[1].split("/bucket/")[0];
         String bucket = parts[1].split("/bucket/")[1];
 

@@ -49,7 +49,7 @@ public class Translator {
             System.out.printf("Modified ARN: %s \n", arn);
             model.setArn(arn);
         }
-//        ArnFields arnFields = splitArn(arn);
+
         return GetBucketRequest.builder()
                 .accountId(accountId)
                 .bucket(arn)
@@ -85,7 +85,7 @@ public class Translator {
     static DeleteBucketRequest translateToDeleteRequest(final ResourceModel model,
                                                         final String accountId) {
         String arn = model.getArn();
-//        ArnFields arnFields = splitArn(arn);
+
         return DeleteBucketRequest.builder()
                 .bucket(arn)
                 .accountId(accountId)

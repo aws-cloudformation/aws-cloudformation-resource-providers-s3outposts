@@ -23,6 +23,7 @@ public class AbstractTestBase {
     protected static final String BUCKET_NAME;
     protected static final String ARN;
 
+    // mock values used for testing purposes only.
     static {
         MOCK_CREDENTIALS = new Credentials("accessKey", "secretKey", "token");
         logger = new LoggerProxy();
