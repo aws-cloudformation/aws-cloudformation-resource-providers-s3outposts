@@ -31,7 +31,7 @@ Properties:
 
 #### BucketName
 
-A name for the bucket. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the bucket name.
+A name for the bucket.
 
 _Required_: Yes
 
