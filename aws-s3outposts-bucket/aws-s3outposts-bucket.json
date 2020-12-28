@@ -12,7 +12,7 @@
       "type": "string"
     },
     "BucketName": {
-      "description": "A name for the bucket. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the bucket name.",
+      "description": "A name for the bucket.",
       "maxLength": 63,
       "minLength": 3,
       "pattern": "(?=^.{3,63}$)(?!^(\\d+\\.)+\\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$)",
