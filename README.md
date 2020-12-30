@@ -7,6 +7,7 @@ This repository contains code to manage the following S3 on Outposts resource pr
 * AWS::S3Outposts::Bucket
 * AWS::S3Outposts::BucketPolicy
 * AWS::S3Outposts::AccessPoint
+* AWS::S3Outposts::Endpoint
 
 > TODO:
 > Once the docs are updated [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html),
