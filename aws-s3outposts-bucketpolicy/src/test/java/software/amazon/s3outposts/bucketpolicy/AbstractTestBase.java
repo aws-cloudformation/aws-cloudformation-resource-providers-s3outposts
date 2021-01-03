@@ -1,6 +1,5 @@
 package software.amazon.s3outposts.bucketpolicy;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.awscore.AwsRequest;
@@ -76,7 +75,7 @@ public class AbstractTestBase {
     protected static String getPolicyDocument(final ResourceModel request) {
         try {
             return MAPPER.writeValueAsString(request.getPolicyDocument());
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new CfnInvalidRequestException(e);
         }
     }
@@ -91,7 +90,7 @@ public class AbstractTestBase {
         try {
             return MAPPER.readValue(policy, new TypeReference<Map<String, Object>>() {
             });
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new CfnGeneralServiceException(e);
         }
     }

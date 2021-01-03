@@ -4,8 +4,6 @@ import software.amazon.awssdk.services.s3control.S3ControlClient;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.cloudformation.proxy.*;
 
-import java.io.IOException;
-
 public class ReadHandler extends BaseHandlerStd {
     private Logger logger;
 
@@ -37,7 +35,7 @@ public class ReadHandler extends BaseHandlerStd {
                     try {
                         return ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(getBucketPolicyResponse, model));
                     } catch (Exception exception) {
-                        return ProgressEvent.failed(model, callbackContext,HandlerErrorCode.GeneralServiceException, exception.getMessage());
+                        return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.GeneralServiceException, exception.getMessage());
                     }
                 });
 
