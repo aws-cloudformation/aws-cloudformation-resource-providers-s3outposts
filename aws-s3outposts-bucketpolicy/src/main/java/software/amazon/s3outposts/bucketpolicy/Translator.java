@@ -86,7 +86,7 @@ public class Translator {
         try {
             return MAPPER.readValue(policy, new TypeReference<Map<String, Object>>() {
             });
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new CfnGeneralServiceException(e);
         }
     }
@@ -100,7 +100,7 @@ public class Translator {
     static String convertJsonObjectToString(Map<String, Object> policyDocument) {
         try {
             return MAPPER.writeValueAsString(policyDocument);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new CfnInvalidRequestException(e);
         }
     }
