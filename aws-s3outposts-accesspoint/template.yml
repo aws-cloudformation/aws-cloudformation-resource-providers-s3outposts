@@ -21,4 +21,3 @@ Resources:
       Handler: software.amazon.s3outposts.accesspoint.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-s3outposts-accesspoint-handler-1.0-SNAPSHOT.jar
-
