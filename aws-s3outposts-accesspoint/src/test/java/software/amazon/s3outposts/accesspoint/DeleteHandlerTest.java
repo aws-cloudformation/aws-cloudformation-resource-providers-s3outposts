@@ -50,7 +50,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_NoAccessPointArn() {
 
-        request = ResourceHandlerRequest.<ResourceModel>builder().build();
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .awsAccountId(ACCOUNT_ID)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -73,10 +75,12 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final DeleteAccessPointResponse deleteAccessPointResponse = DeleteAccessPointResponse.builder().build();
-        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class))).thenReturn(deleteAccessPointResponse);
+        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class)))
+                .thenReturn(deleteAccessPointResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -102,9 +106,11 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
-        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class))).thenThrow(constructS3ControlException("InvalidAccessPoint"));
+        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class)))
+                .thenThrow(constructS3ControlException("InvalidAccessPoint"));
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);

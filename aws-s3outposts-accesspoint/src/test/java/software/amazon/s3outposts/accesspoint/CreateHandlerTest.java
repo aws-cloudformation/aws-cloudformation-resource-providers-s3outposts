@@ -55,6 +55,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_NO_BUCKET_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
@@ -80,6 +81,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_NO_ACCESSPOINT_NAME_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
@@ -106,6 +108,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_NO_VPCCONFIGURATION_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
@@ -132,6 +135,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_CREATE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final CreateAccessPointResponse createAccessPointResponse = CreateAccessPointResponse.builder()
@@ -167,6 +171,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_CREATE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final CreateAccessPointResponse createAccessPointResponse = CreateAccessPointResponse.builder()
@@ -220,6 +225,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_NO_POLICY_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final CreateAccessPointResponse createAccessPointResponse = CreateAccessPointResponse.builder()
@@ -268,6 +274,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_CREATE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         when(proxyClient.client().createAccessPoint(any(CreateAccessPointRequest.class)))
@@ -297,6 +304,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_CREATE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         when(proxyClient.client().createAccessPoint(any(CreateAccessPointRequest.class)))
@@ -326,6 +334,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_CREATE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final CreateAccessPointResponse createAccessPointResponse = CreateAccessPointResponse.builder()
@@ -365,6 +374,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_EMPTY_POLICY_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final CreateAccessPointResponse createAccessPointResponse = CreateAccessPointResponse.builder()
