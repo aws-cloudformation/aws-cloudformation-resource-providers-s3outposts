@@ -22,12 +22,22 @@ public class DeleteHandler extends BaseHandlerStd {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, ACCESSPOINT_ARN_REQD);
         }
 
-        logger.log(String.format("Access:DeleteHandler called for arn: %s \n", model.getArn()));
+        logger.log(String.format("%s::DeleteHandler called for arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> deleteAccessPoint(proxy, proxyClient, request, progress, logger));
     }
 
+    /**
+     * Calls the API deleteAccessPoint
+     *
+     * @param proxy
+     * @param proxyClient
+     * @param request
+     * @param progressEvent
+     * @param logger
+     * @return
+     */
     private ProgressEvent<ResourceModel, CallbackContext> deleteAccessPoint(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<S3ControlClient> proxyClient,
@@ -38,6 +48,8 @@ public class DeleteHandler extends BaseHandlerStd {
         final ResourceModel model = progressEvent.getResourceModel();
         final CallbackContext context = progressEvent.getCallbackContext();
 
+        logger.log(String.format("%s::Delete::deleteAccessPoint called for arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+
         return proxy.initiate("AWS-S3Outposts-AccessPoint::Delete", proxyClient, model, context)
                 .translateToServiceRequest(resourceModel ->
                         Translator.translateToDeleteRequest(resourceModel, request.getAwsAccountId()))
@@ -46,6 +58,7 @@ public class DeleteHandler extends BaseHandlerStd {
                 )
                 .handleError(this::handleError)
                 .done(deleteAccessPointResponse -> ProgressEvent.defaultSuccessHandler(null));
+
     }
 
 }

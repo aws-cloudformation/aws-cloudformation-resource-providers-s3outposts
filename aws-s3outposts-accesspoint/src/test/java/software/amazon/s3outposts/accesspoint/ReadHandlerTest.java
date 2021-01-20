@@ -52,7 +52,9 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_EmptyModel() {
 
-        request = ResourceHandlerRequest.<ResourceModel>builder().build();
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .awsAccountId(ACCOUNT_ID)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -75,6 +77,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_READ_NO_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
@@ -98,6 +101,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
@@ -135,6 +139,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
@@ -173,6 +178,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
@@ -215,6 +221,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
@@ -255,6 +262,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         when(proxyClient.client().getAccessPoint(any(GetAccessPointRequest.class)))
@@ -284,6 +292,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
@@ -321,6 +330,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         when(proxyClient.client().getAccessPoint(any(GetAccessPointRequest.class)))
