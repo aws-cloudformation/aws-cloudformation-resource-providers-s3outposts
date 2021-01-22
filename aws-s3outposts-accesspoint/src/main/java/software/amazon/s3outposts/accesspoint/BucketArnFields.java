@@ -1,26 +1,36 @@
 package software.amazon.s3outposts.accesspoint;
 
-public class ArnFields {
+public class BucketArnFields {
     String region, accountId, outpostId, bucket;
 
-    public ArnFields() {
+    public BucketArnFields() {
         region = "";
         accountId = "";
         outpostId = "";
         bucket = "";
     }
 
-    public ArnFields(String r, String a, String o, String b) {
+    public BucketArnFields(String r, String a, String o, String b) {
         region = r;
         accountId = a;
         outpostId = o;
         bucket = b;
     }
 
-    protected static ArnFields splitArn(final String arn) {
+    /**
+     * Splits the bucketArn into the individual fields:
+     * - region
+     * - accountId
+     * - outpostId
+     * - bucket
+     *
+     * @param arn
+     * @return
+     */
+    protected static BucketArnFields splitArn(final String arn) {
 
         if (arn == null) {
-            return new ArnFields();
+            return new BucketArnFields();
         }
 
         // An arn for a S3Outposts bucket looks like:
@@ -43,6 +53,6 @@ public class ArnFields {
         String outpostId = parts[1].split("/bucket/")[0];
         String bucket = parts[1].split("/bucket/")[1];
 
-        return new ArnFields(region, accountId, outpostId, bucket);
+        return new BucketArnFields(region, accountId, outpostId, bucket);
     }
 }

@@ -74,7 +74,7 @@ public class CreateHandler extends BaseHandlerStd {
                         // AN TODO: [P0]: Remove the following block of code before making the resource public.
                         // Start: Code Block
                         // Get outpostId from bucket arn and replace `ec2` with outpostId in accesspoint arn.
-                        final ArnFields arnFields = ArnFields.splitArn(model.getBucket());
+                        final BucketArnFields arnFields = BucketArnFields.splitArn(model.getBucket());
                         String accessPointArn = createAccessPointResponse.accessPointArn()
                                 .replaceFirst("/ec2/", String.format("/%s/", arnFields.outpostId));
                         logger.log(String.format("%s::Create::createAccessPoint - AccessPoint ARN: %s \n", ResourceModel.TYPE_NAME, accessPointArn));

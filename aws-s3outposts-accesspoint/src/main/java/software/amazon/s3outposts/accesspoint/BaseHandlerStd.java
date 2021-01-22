@@ -98,8 +98,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
 
     /**
-     * Adds a delay of 40s to all the AccessPoint state to transition from "Associated" to "Active".
-     * We can control the amount of delay by modifying the value of callbackContext.forcedDelayCount.
+     * Adds a total delay of 40s (CALLBACK_DELAY_SECONDS * forcedDelayCount) to allow the AccessPoint state
+     * to transition from "Associated" to "Active".
      *
      * @param progressEvent
      * @param logger

@@ -46,7 +46,7 @@ public class Translator {
      * @param accountId
      * @return
      */
-    static DeleteAccessPointRequest translateToDeleteRequest(final ResourceModel model,
+    static DeleteAccessPointRequest translateToDeleteAPRequest(final ResourceModel model,
                                                              final String accountId) {
         return DeleteAccessPointRequest.builder()
                 .accountId(accountId)
@@ -204,7 +204,7 @@ public class Translator {
         // We do need the statement to get the accessPointArn for real outposts as well.
         // Start: Code Block
         // Get outpostId from bucket arn and replace `ec2` with outpostId in accesspoint arn.
-        final ArnFields arnFields = ArnFields.splitArn(model.getBucket());
+        final BucketArnFields arnFields = BucketArnFields.splitArn(model.getBucket());
         final String accessPointArn = accessPoint.accessPointArn()
                 .replaceFirst("/ec2/", String.format("/%s/", arnFields.outpostId));
         // End: Code Block
