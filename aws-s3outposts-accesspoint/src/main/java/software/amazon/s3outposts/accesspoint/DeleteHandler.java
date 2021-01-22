@@ -52,7 +52,7 @@ public class DeleteHandler extends BaseHandlerStd {
 
         return proxy.initiate("AWS-S3Outposts-AccessPoint::Delete", proxyClient, model, context)
                 .translateToServiceRequest(resourceModel ->
-                        Translator.translateToDeleteRequest(resourceModel, request.getAwsAccountId()))
+                        Translator.translateToDeleteAPRequest(resourceModel, request.getAwsAccountId()))
                 .makeServiceCall((deleteAccessPointRequest, s3ControlProxyClient) ->
                         s3ControlProxyClient.injectCredentialsAndInvokeV2(deleteAccessPointRequest, s3ControlProxyClient.client()::deleteAccessPoint)
                 )
