@@ -13,6 +13,10 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected static final String BUCKET_NAME_REQD = "Bucket Name is required.";
     protected static final String OUTPOSTID_REQD = "OutpostId is required.";
 
+    // Error Codes
+    protected static final String NO_SUCH_TAGSET = "NoSuchTagSet";
+    protected static final String NO_SUCH_LIFECYCLE_CONFIGURATION = "NoSuchLifecycleConfiguration";
+
     // Constants
     protected static final int CALLBACK_DELAY_SECONDS = 20;
 
@@ -56,6 +60,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final ResourceModel resourceModel,
             final CallbackContext callbackContext
     ) throws Exception {
+
         try {
             throw exception;
         } catch (BadRequestException | InvalidRequestException e) {
@@ -113,4 +118,82 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         }
         return ProgressEvent.defaultInProgressHandler(callbackContext, CALLBACK_DELAY_SECONDS, progressEvent.getResourceModel());
     }
+
+    /**
+     * Calls the API putBucketTagging
+     * While creating a bucket we will call this routine even if the user does not provide any resource tags.
+     * This is because CFN may want to set system tags.
+     *
+     * @param proxy
+     * @param proxyClient
+     * @param request
+     * @param progress
+     * @param logger
+     * @return
+     */
+    protected ProgressEvent<ResourceModel, CallbackContext> putBucketTagging(
+            AmazonWebServicesClientProxy proxy,
+            ProxyClient<S3ControlClient> proxyClient,
+            ResourceHandlerRequest<ResourceModel> request,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
+            Logger logger) {
+
+        final ResourceModel model = progress.getResourceModel();
+        final CallbackContext callbackContext = progress.getCallbackContext();
+
+        logger.log(String.format("%s::Create/Update::PutBucketTagging - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+
+        if (request.getDesiredResourceTags() == null && request.getSystemTags() == null)
+            return ProgressEvent.progress(model, callbackContext);
+
+        return proxy.initiate("AWS-S3Outposts-Bucket::Create::PutBucketTagging", proxyClient, model, callbackContext)
+                .translateToServiceRequest(resourceModel ->
+                        Translator.translateToSdkPutBucketTaggingRequest(resourceModel,
+                                request.getDesiredResourceTags(), request.getSystemTags(), request.getAwsAccountId())
+                )
+                .makeServiceCall((putBucketTaggingRequest, s3ControlProxyClient) ->
+                        s3ControlProxyClient.injectCredentialsAndInvokeV2(putBucketTaggingRequest,
+                                s3ControlProxyClient.client()::putBucketTagging)
+                )
+                .handleError(this::handleError)
+                .progress();
+
+    }
+
+    /**
+     * Calls the API putBucketLifecycleConfiguration
+     *
+     * @param proxy
+     * @param proxyClient
+     * @param request
+     * @param progress
+     * @param logger
+     * @return
+     */
+    protected ProgressEvent<ResourceModel, CallbackContext> putLifecycleConfiguration(
+            AmazonWebServicesClientProxy proxy,
+            ProxyClient<S3ControlClient> proxyClient,
+            ResourceHandlerRequest<ResourceModel> request,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
+            Logger logger) {
+
+        final ResourceModel model = progress.getResourceModel();
+        final CallbackContext callbackContext = progress.getCallbackContext();
+
+        logger.log(String.format("%s::Create/Update::PutBucketLifecycleConfiguration - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+
+        return proxy.initiate("AWS-S3Outposts-Bucket::Create::PutBucketLifecycleConfiguration", proxyClient, model, callbackContext)
+                .translateToServiceRequest(resourceModel ->
+                        Translator.translateToSdkPutBucketLifecycleConfigurationRequest(resourceModel, request.getAwsAccountId())
+                )
+                .makeServiceCall((putBucketLifecycleConfigurationRequest, s3ControlProxyClient) ->
+                        s3ControlProxyClient.injectCredentialsAndInvokeV2(putBucketLifecycleConfigurationRequest,
+                                s3ControlProxyClient.client()::putBucketLifecycleConfiguration)
+                )
+                .handleError(this::handleError)
+                .progress();
+
+
+    }
+
 }

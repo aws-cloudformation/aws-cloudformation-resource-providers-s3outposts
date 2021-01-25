@@ -1,15 +1,13 @@
 package software.amazon.s3outposts.bucket;
 
 import com.amazonaws.util.StringUtils;
-import com.google.common.collect.Lists;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
-import software.amazon.awssdk.services.s3control.model.*;
 import software.amazon.cloudformation.proxy.*;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class ListHandler extends BaseHandlerStd {
+
     private Logger logger;
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -28,32 +26,24 @@ public class ListHandler extends BaseHandlerStd {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, OUTPOSTID_REQD);
         }
 
-        try {
-            List<ResourceModel> models = Lists.newArrayList();
-            // Form ListRegionalBucketsRequest and make call to listRegionalBuckets
-            final ListRegionalBucketsResponse response = proxyClient.injectCredentialsAndInvokeV2(
-                    Translator.translateToListRequest(model, request.getAwsAccountId(), request.getNextToken()),
-                    proxyClient.client()::listRegionalBuckets);
-            // Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/model/ListRegionalBucketsResponse.html
-            response.regionalBucketList()
-                    .stream()
-                    .map(regionalBucket -> Translator.translateFromRegionalBucket(regionalBucket, model))
-                    .collect(Collectors.toCollection(() -> models));
+        return proxy.initiate("AWS-S3Outposts-Bucket::List::ListRegionalBuckets", proxyClient, model, callbackContext)
+                .translateToServiceRequest(resourceModel ->
+                        Translator.translateToListRequest(resourceModel, request.getAwsAccountId(), request.getNextToken()))
+                .makeServiceCall(((listRegionalBucketsRequest, s3ControlProxyClient) ->
+                        s3ControlProxyClient.injectCredentialsAndInvokeV2(listRegionalBucketsRequest, s3ControlProxyClient.client()::listRegionalBuckets)))
+                .handleError(this::handleError)
+                .done(listRegionalBucketsResponse ->
+                        ProgressEvent.<ResourceModel, CallbackContext>builder()
+                                .resourceModels(
+                                        listRegionalBucketsResponse.regionalBucketList()
+                                                .stream()
+                                                .map(regionalBucket -> Translator.translateFromRegionalBucket(regionalBucket, model))
+                                                .collect(Collectors.toList())
+                                )
+                                .nextToken(listRegionalBucketsResponse.nextToken())
+                                .status(OperationStatus.SUCCESS)
+                                .build()
+                );
 
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModels(models)
-                    .status(OperationStatus.SUCCESS)
-                    .nextToken(response.nextToken())
-                    .build();
-
-        } catch (BadRequestException | InvalidRequestException e) {
-            return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, e.getMessage());
-        } catch (InternalServiceException e) {
-            return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.ServiceInternalError, e.getMessage());
-        } catch (NotFoundException e) {
-            return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.NotFound, e.getMessage());
-        } catch (Exception e) {
-            return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.GeneralServiceException, e.getMessage());
-        }
     }
 }
