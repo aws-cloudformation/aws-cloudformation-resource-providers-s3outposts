@@ -34,6 +34,7 @@ public class AbstractTestBase {
     protected static final String ACCESSPOINT_ARN;
     protected static final String VPC_ID;
     protected static final String ACCESSPOINT_POLICY;
+    protected static final String ACCESSPOINT_POLICY2;
     protected static final String EMPTY_POLICY;
 
     // mock values used for testing purposes only
@@ -50,6 +51,8 @@ public class AbstractTestBase {
         VPC_ID = "vpc-123";
         ACCESSPOINT_POLICY = String.format("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"st1\",\"Effect\":\"Allow\"," +
                 "\"Principal\":{\"AWS\":\"%s\"},\"Action\":\"*\",\"Resource\":\"%s\"}]}", ACCOUNT_ID, ACCESSPOINT_ARN);
+        ACCESSPOINT_POLICY2 = String.format("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"st1\",\"Effect\":\"Allow\"," +
+                "\"Principal\":{\"AWS\":\"%s\"},\"Action\":\"s3-outposts:*\",\"Resource\":\"%s\"}]}", ACCOUNT_ID, ACCESSPOINT_ARN);
         EMPTY_POLICY = "{}";
     }
 
@@ -59,6 +62,14 @@ public class AbstractTestBase {
             .name(ACCESSPOINT_NAME)
             .vpcConfiguration(VpcConfiguration.builder().vpcId(VPC_ID).build())
             .policy(getPolicyDocument(ACCESSPOINT_POLICY))
+            .build();
+
+    protected static final ResourceModel AP_COMPLETE_MODEL2 = ResourceModel.builder()
+            .arn(ACCESSPOINT_ARN)
+            .bucket(BUCKET_ARN)
+            .name(ACCESSPOINT_NAME)
+            .vpcConfiguration(VpcConfiguration.builder().vpcId(VPC_ID).build())
+            .policy(getPolicyDocument(ACCESSPOINT_POLICY2))
             .build();
 
     protected static final ResourceModel AP_CREATE_MODEL = ResourceModel.builder()

@@ -22,7 +22,7 @@ public class ReadHandler extends BaseHandlerStd {
         if (model == null || StringUtils.isEmpty(model.getArn())) {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, ACCESSPOINT_ARN_REQD);
         }
-        logger.log(String.format("AccessPoint::ReadHandler called for arn: %s \n", model.getArn()));
+        logger.log(String.format("%s::ReadHandler called for arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
 
         return (ProgressEvent.progress(model, callbackContext))
                 .then(progress -> getAccessPoint(proxy, proxyClient, request, progress.getResourceModel(), progress.getCallbackContext(), logger))
@@ -52,7 +52,7 @@ public class ReadHandler extends BaseHandlerStd {
             CallbackContext callbackContext,
             Logger logger) {
 
-        logger.log(String.format("AccessPoint::Read::GetAccessPoint - arn: %s \n", model.getArn()));
+        logger.log(String.format("%s::Read::GetAccessPoint - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
         return proxy.initiate("AWS-S3Outposts-AccessPoint::Read::GetAccessPoint", proxyClient, model, callbackContext)
                 // Form GetAccessPointRequest
                 .translateToServiceRequest(resourceModel -> Translator.translateToGetAPRequest(resourceModel, request.getAwsAccountId()))
@@ -88,7 +88,7 @@ public class ReadHandler extends BaseHandlerStd {
             CallbackContext callbackContext,
             Logger logger) {
 
-        logger.log(String.format("AccessPoint::Read::GetAccessPointPolicy - arn: %s \n", model.getArn()));
+        logger.log(String.format("%s::Read::GetAccessPointPolicy - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
         return proxy.initiate("AWS-S3Outposts-AccessPoint::Read::GetAccessPointPolicy", proxyClient, model, callbackContext)
                 // Form GetAccessPointPolicyRequest
                 .translateToServiceRequest(resourceModel -> Translator.translateToGetAPPolicyRequest(resourceModel, request.getAwsAccountId()))

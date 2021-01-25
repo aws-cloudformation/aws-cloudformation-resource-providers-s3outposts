@@ -31,13 +31,13 @@ public class CreateHandler extends BaseHandlerStd {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, VPC_CONFIGURATION_REQD);
         }
 
-        logger.log(String.format("AccessPoint::CreateHandler called for bucketArn: %s, with name: %s, with Vpc: %s \n",
-                model.getBucket(), model.getName(), model.getVpcConfiguration().getVpcId()));
+        logger.log(String.format("%s::CreateHandler called for bucketArn: %s, with name: %s, with Vpc: %s \n",
+                ResourceModel.TYPE_NAME, model.getBucket(), model.getName(), model.getVpcConfiguration().getVpcId()));
 
         return ProgressEvent.progress(model, callbackContext)
-                .then(progress -> createAccessPoint(proxy, proxyClient, request, progress.getResourceModel(), progress.getCallbackContext(), logger))
+                .then(progress -> createAccessPoint(proxy, proxyClient, request, progress, logger))
                 .then(progress -> BaseHandlerStd.propagate(progress, logger))
-                .then(progress -> putAccessPointPolicy(proxy, proxyClient, request, progress.getResourceModel(), progress.getCallbackContext(), logger))
+                .then(progress -> putAccessPointPolicy(proxy, proxyClient, request, progress, logger))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
@@ -48,8 +48,7 @@ public class CreateHandler extends BaseHandlerStd {
      * @param proxy
      * @param proxyClient
      * @param request
-     * @param model
-     * @param callbackContext
+     * @param progress
      * @param logger
      * @return
      */
@@ -57,9 +56,13 @@ public class CreateHandler extends BaseHandlerStd {
             AmazonWebServicesClientProxy proxy,
             ProxyClient<S3ControlClient> proxyClient,
             ResourceHandlerRequest<ResourceModel> request,
-            ResourceModel model,
-            CallbackContext callbackContext,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
             Logger logger) {
+
+        ResourceModel model = progress.getResourceModel();
+        CallbackContext callbackContext = progress.getCallbackContext();
+
+        logger.log(String.format("%s::Create::createAccessPoint for bucket: %s \n", ResourceModel.TYPE_NAME, model.getBucket()));
 
         return proxy.initiate("AWS-S3Outposts-AccessPoint::Create::CreateAccessPoint", proxyClient, model, callbackContext)
                 .translateToServiceRequest(resourceModel ->
@@ -71,10 +74,10 @@ public class CreateHandler extends BaseHandlerStd {
                         // AN TODO: [P0]: Remove the following block of code before making the resource public.
                         // Start: Code Block
                         // Get outpostId from bucket arn and replace `ec2` with outpostId in accesspoint arn.
-                        final ArnFields arnFields = ArnFields.splitArn(model.getBucket());
+                        final BucketArnFields arnFields = BucketArnFields.splitArn(model.getBucket());
                         String accessPointArn = createAccessPointResponse.accessPointArn()
                                 .replaceFirst("/ec2/", String.format("/%s/", arnFields.outpostId));
-                        logger.log(String.format("CreateHandler - AccessPoint ARN: %s", accessPointArn));
+                        logger.log(String.format("%s::Create::createAccessPoint - AccessPoint ARN: %s \n", ResourceModel.TYPE_NAME, accessPointArn));
                         // End: Code Block
                         resourceModel.setArn(accessPointArn);
                         cbContext.setStabilized(true);
@@ -94,8 +97,7 @@ public class CreateHandler extends BaseHandlerStd {
      * @param proxy
      * @param proxyClient
      * @param request
-     * @param model
-     * @param callbackContext
+     * @param progress
      * @param logger
      * @return
      */
@@ -103,9 +105,13 @@ public class CreateHandler extends BaseHandlerStd {
             AmazonWebServicesClientProxy proxy,
             ProxyClient<S3ControlClient> proxyClient,
             ResourceHandlerRequest<ResourceModel> request,
-            ResourceModel model,
-            CallbackContext callbackContext,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
             Logger logger) {
+
+        ResourceModel model = progress.getResourceModel();
+        CallbackContext callbackContext = progress.getCallbackContext();
+
+        logger.log(String.format("%s::Create::putAccessPointPolicy for accesspoint: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
 
         if (model.getPolicy() != null) {
 

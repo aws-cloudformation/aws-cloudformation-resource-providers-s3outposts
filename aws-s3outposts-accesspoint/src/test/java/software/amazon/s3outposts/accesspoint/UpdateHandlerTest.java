@@ -1,17 +1,17 @@
 package software.amazon.s3outposts.accesspoint;
 
-import java.time.Duration;
-import software.amazon.awssdk.core.SdkClient;
-import software.amazon.awssdk.services.s3control.S3ControlClient;
-import software.amazon.awssdk.services.s3control.model.*;
-import software.amazon.awssdk.services.s3control.model.VpcConfiguration;
-import software.amazon.cloudformation.proxy.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.s3control.S3ControlClient;
+import software.amazon.awssdk.services.s3control.model.VpcConfiguration;
+import software.amazon.awssdk.services.s3control.model.*;
+import software.amazon.cloudformation.proxy.*;
+
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,7 +53,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_EmptyModel() {
 
-        request = ResourceHandlerRequest.<ResourceModel>builder().build();
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .awsAccountId(ACCOUNT_ID)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -76,6 +78,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_READ_NO_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
@@ -100,10 +103,11 @@ public class UpdateHandlerTest extends AbstractTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
                 .previousResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
-        final DeleteAccessPointPolicyResponse deleteAPPolicyResponse = DeleteAccessPointPolicyResponse.builder().build();
-        when(proxyClient.client().deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class))).thenReturn(deleteAPPolicyResponse);
+//        final DeleteAccessPointPolicyResponse deleteAPPolicyResponse = DeleteAccessPointPolicyResponse.builder().build();
+//        when(proxyClient.client().deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class))).thenReturn(deleteAPPolicyResponse);
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
                 .bucket(BUCKET_NAME)
@@ -127,13 +131,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getErrorCode()).isNull();
 
         verify(proxyClient.client(), never()).putAccessPointPolicy(any(PutAccessPointPolicyRequest.class));
-        verify(proxyClient.client()).deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class));
+        verify(proxyClient.client(), never()).deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 
     /**
-     * Happy Path - Valid Policy
+     * Happy Path - Valid Policy - but no change
      */
     @Test
     public void handleRequest_Success_SamePolicy() {
@@ -141,10 +145,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_COMPLETE_MODEL)
                 .previousResourceState(AP_COMPLETE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
-
-        final PutAccessPointPolicyResponse putAPPolicyResponse = PutAccessPointPolicyResponse.builder().build();
-        when(proxyClient.client().putAccessPointPolicy(any(PutAccessPointPolicyRequest.class))).thenReturn(putAPPolicyResponse);
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
                 .bucket(BUCKET_NAME)
@@ -169,6 +171,50 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), never()).putAccessPointPolicy(any(PutAccessPointPolicyRequest.class));
+        verify(proxyClient.client(), never()).deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Happy Path - Valid Policy - with change
+     */
+    @Test
+    public void handleRequest_Success_DifferentPolicy() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(AP_COMPLETE_MODEL2)
+                .previousResourceState(AP_COMPLETE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final PutAccessPointPolicyResponse putAPPolicyResponse = PutAccessPointPolicyResponse.builder().build();
+        when(proxyClient.client().putAccessPointPolicy(any(PutAccessPointPolicyRequest.class))).thenReturn(putAPPolicyResponse);
+
+        final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
+                .bucket(BUCKET_NAME)
+                .name(ACCESSPOINT_NAME)
+                .vpcConfiguration(VpcConfiguration.builder().vpcId(VPC_ID).build())
+                .build();
+        when(proxyClient.client().getAccessPoint(any(GetAccessPointRequest.class))).thenReturn(getAccessPointResponse);
+
+        final GetAccessPointPolicyResponse getAPPolicyResponse = GetAccessPointPolicyResponse.builder()
+                .policy(ACCESSPOINT_POLICY2)
+                .build();
+        when(proxyClient.client().getAccessPointPolicy(any(GetAccessPointPolicyRequest.class))).thenReturn(getAPPolicyResponse);
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(AP_COMPLETE_MODEL2);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
         verify(proxyClient.client()).putAccessPointPolicy(any(PutAccessPointPolicyRequest.class));
         verify(proxyClient.client(), never()).deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -184,6 +230,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_NO_POLICY_MODEL)
                 .previousResourceState(AP_COMPLETE_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final DeleteAccessPointPolicyResponse deleteAPPolicyResponse = DeleteAccessPointPolicyResponse.builder().build();
@@ -225,6 +272,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_COMPLETE_MODEL)
                 .previousResourceState(AP_NO_POLICY_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final PutAccessPointPolicyResponse putAPPolicyResponse = PutAccessPointPolicyResponse.builder().build();
@@ -268,9 +316,11 @@ public class UpdateHandlerTest extends AbstractTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_EMPTY_POLICY_MODEL)
                 .previousResourceState(AP_NO_POLICY_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
-        when(proxyClient.client().putAccessPointPolicy(any(PutAccessPointPolicyRequest.class))).thenThrow(constructS3ControlException("AccessDenied"));
+        when(proxyClient.client().putAccessPointPolicy(any(PutAccessPointPolicyRequest.class)))
+                .thenThrow(constructS3ControlException("AccessDenied"));
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -297,10 +347,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_NO_POLICY_MODEL)
-                .previousResourceState(AP_NO_POLICY_MODEL)
+                .previousResourceState(AP_EMPTY_POLICY_MODEL)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
-        when(proxyClient.client().deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class))).thenThrow(constructS3ControlException("AccessDenied"));
+        when(proxyClient.client().deleteAccessPointPolicy(any(DeleteAccessPointPolicyRequest.class)))
+                .thenThrow(constructS3ControlException("AccessDenied"));
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
