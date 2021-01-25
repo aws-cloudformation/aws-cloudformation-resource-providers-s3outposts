@@ -25,8 +25,14 @@ Resources:
                 Action:
                 - "s3-outposts:CreateBucket"
                 - "s3-outposts:DeleteBucket"
+                - "s3-outposts:DeleteBucketLifecycleConfiguration"
+                - "s3-outposts:DeleteBucketTagging"
                 - "s3-outposts:GetBucket"
+                - "s3-outposts:GetBucketLifecycleConfiguration"
+                - "s3-outposts:GetBucketTagging"
                 - "s3-outposts:ListRegionalBuckets"
+                - "s3-outposts:PutBucketLifecycleConfiguration"
+                - "s3-outposts:PutBucketTagging"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

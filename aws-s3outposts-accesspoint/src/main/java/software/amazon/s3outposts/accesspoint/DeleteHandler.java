@@ -58,7 +58,6 @@ public class DeleteHandler extends BaseHandlerStd {
                 )
                 .handleError(this::handleError)
                 .done(deleteAccessPointResponse -> ProgressEvent.defaultSuccessHandler(null));
-
     }
 
 }
