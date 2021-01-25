@@ -13,7 +13,9 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "Type" : "AWS::S3Outposts::Bucket",
     "Properties" : {
         "<a href="#bucketname" title="BucketName">BucketName</a>" : <i>String</i>,
-        "<a href="#outpostid" title="OutpostId">OutpostId</a>" : <i>String</i>
+        "<a href="#outpostid" title="OutpostId">OutpostId</a>" : <i>String</i>,
+        "<a href="#tags" title="Tags">Tags</a>" : <i>[ <a href="tag.md">Tag</a>, ... ]</i>,
+        "<a href="#lifecycleconfiguration" title="LifecycleConfiguration">LifecycleConfiguration</a>" : <i><a href="lifecycleconfiguration.md">LifecycleConfiguration</a></i>
     }
 }
 </pre>
@@ -25,6 +27,9 @@ Type: AWS::S3Outposts::Bucket
 Properties:
     <a href="#bucketname" title="BucketName">BucketName</a>: <i>String</i>
     <a href="#outpostid" title="OutpostId">OutpostId</a>: <i>String</i>
+    <a href="#tags" title="Tags">Tags</a>: <i>
+      - <a href="tag.md">Tag</a></i>
+    <a href="#lifecycleconfiguration" title="LifecycleConfiguration">LifecycleConfiguration</a>: <i><a href="lifecycleconfiguration.md">LifecycleConfiguration</a></i>
 </pre>
 
 ## Properties
@@ -56,6 +61,24 @@ _Type_: String
 _Pattern_: <code>^(op-[a-f0-9]{17}|\d{12}|ec2)$</code>
 
 _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
+
+#### Tags
+
+An arbitrary set of tags (key-value pairs) for this S3Outposts bucket.
+
+_Required_: No
+
+_Type_: List of <a href="tag.md">Tag</a>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### LifecycleConfiguration
+
+_Required_: No
+
+_Type_: <a href="lifecycleconfiguration.md">LifecycleConfiguration</a>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 ## Return Values
 
