@@ -104,9 +104,6 @@ public class UpdateHandler extends BaseHandlerStd {
 
         logger.log(String.format("%s::Update::updateBucketLifecycleConfiguration - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
 
-        // AN: TODO: [P0]: Evaluate whether or not CFN can update SystemTags. If yes, add code to support this use-case.
-
-        // No change to the tags
         if (Objects.equals(model.getLifecycleConfiguration(), previousModel.getLifecycleConfiguration()))
             return ProgressEvent.progress(model, callbackContext);
 
