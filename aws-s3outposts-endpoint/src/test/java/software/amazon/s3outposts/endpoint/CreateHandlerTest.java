@@ -157,35 +157,6 @@ public class CreateHandlerTest extends AbstractTestBase {
 
     }
 
-//    @Test
-//    public void handleRequest_CreateEndpoint_EmptyArn() {
-//
-//        request = ResourceHandlerRequest.<ResourceModel>builder()
-//                .desiredResourceState(REQ_MODEL_CREATE)
-//                .awsAccountId(ACCOUNT_ID)
-//                .build();
-//
-//        final CreateEndpointResponse createEndpointResponse = CreateEndpointResponse.builder().endpointArn("").build();
-//        when(proxyClient.client().createEndpoint(any(CreateEndpointRequest.class))).thenReturn(createEndpointResponse);
-//
-//        final ProgressEvent<ResourceModel, CallbackContext> progress =
-//                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
-//
-//        assertThat(progress).isNotNull();
-//        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-//        assertThat(progress.getResourceModel()).isEqualTo(REQ_MODEL_CREATE);
-//        assertThat(progress.getResourceModels()).isNull();
-//        assertThat(progress.getCallbackContext()).isNull();
-//        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
-//        assertThat(progress.getMessage()).isNull();
-//        assertThat(progress.getErrorCode()).isNull();
-//
-//        verify(proxyClient.client()).createEndpoint(any(CreateEndpointRequest.class));
-//        verify(sdkClient, atLeastOnce()).serviceName();
-//
-//
-//    }
-
     /**
      * Error Path - AccessDenied
      */
