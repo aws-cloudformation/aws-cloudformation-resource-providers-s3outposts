@@ -9,6 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
 import software.amazon.awssdk.services.s3control.model.DeleteBucketPolicyRequest;
 import software.amazon.awssdk.services.s3control.model.DeleteBucketPolicyResponse;
+import software.amazon.awssdk.services.s3control.model.GetBucketPolicyRequest;
+import software.amazon.awssdk.services.s3control.model.GetBucketPolicyResponse;
 import software.amazon.cloudformation.proxy.*;
 
 import java.time.Duration;
@@ -55,6 +57,14 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .desiredResourceState(ONLY_BUCKET_MODEL)
                 .build();
 
+        final GetBucketPolicyResponse getBucketPolicyResponse =
+                GetBucketPolicyResponse.builder()
+                        .policy(BUCKET_POLICY)
+                        .build();
+
+        when(proxyClient.client().getBucketPolicy(any(GetBucketPolicyRequest.class)))
+                .thenReturn(getBucketPolicyResponse);
+
         final DeleteBucketPolicyResponse deleteResponse = DeleteBucketPolicyResponse.builder().build();
         when(proxyClient.client().deleteBucketPolicy(any(DeleteBucketPolicyRequest.class))).thenReturn(deleteResponse);
 
@@ -69,13 +79,14 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).getBucketPolicy(any(GetBucketPolicyRequest.class));
         verify(proxyClient.client()).deleteBucketPolicy(any(DeleteBucketPolicyRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 
     /**
-     * Error: No BucketARN provided
+     * Validation Error: No BucketARN provided
      */
     @Test
     public void handleRequest_NoBucket() {
@@ -93,6 +104,35 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(progress.getCallbackContext()).isEqualTo(new CallbackContext());
         assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(progress.getResourceModels()).isNull();
+
+    }
+
+    /**
+     * Error - GetBucketPolicy returns NO_SUCH_BUCKET_POLICY
+     */
+    @Test
+    public void handleRequest_Error_GetBucketPolicy() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(ONLY_BUCKET_MODEL)
+                .build();
+
+        when(proxyClient.client().getBucketPolicy(any(GetBucketPolicyRequest.class)))
+                .thenThrow(constructS3ControlException("NoSuchBucketPolicy"));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(progress.getMessage()).isEqualTo("Bucket Policy does not exist.");
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+
+        verify(proxyClient.client()).getBucketPolicy(any(GetBucketPolicyRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 

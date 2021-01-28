@@ -31,6 +31,8 @@ public class CreateHandler extends BaseHandlerStd {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, OUTPOSTID_REQD);
         }
 
+        logger.log(String.format("%s::Create bucket name: %s", ResourceModel.TYPE_NAME, model.getBucketName()));
+
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> createBucket(proxy, proxyClient, request, progress, logger))
                 .then(progress -> BaseHandlerStd.propagate(progress, logger))
@@ -62,7 +64,8 @@ public class CreateHandler extends BaseHandlerStd {
         ResourceModel model = progress.getResourceModel();
         CallbackContext callbackContext = progress.getCallbackContext();
 
-        logger.log(String.format("%s::Create::CreateBucket - arn %s \n", ResourceModel.TYPE_NAME, model.getBucketName()));
+        logger.log(String.format("%s::Create::CreateBucket - name %s \n", ResourceModel.TYPE_NAME, model.getBucketName()));
+
         return proxy.initiate("AWS-S3Outposts-Bucket::Create", proxyClient, model, callbackContext)
                 // Form CreateBucketRequest
                 .translateToServiceRequest(Translator::translateToCreateRequest)

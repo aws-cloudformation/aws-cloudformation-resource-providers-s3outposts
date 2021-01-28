@@ -45,6 +45,7 @@
     "Rule": {
       "description": "Specifies lifecycle rules for an Amazon S3Outposts bucket. You must specify at least one of the following: AbortIncompleteMultipartUpload, ExpirationDate, ExpirationInDays.",
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Status": {
           "type": "string",
