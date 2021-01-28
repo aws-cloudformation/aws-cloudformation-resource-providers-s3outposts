@@ -8,16 +8,9 @@ import software.amazon.cloudformation.proxy.*;
 
 
 public class CreateHandler extends BaseHandlerStd {
+
     private Logger logger;
 
-    /**
-     * @param proxy
-     * @param request
-     * @param callbackContext
-     * @param proxyClient
-     * @param logger
-     * @return
-     */
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
@@ -36,6 +29,8 @@ public class CreateHandler extends BaseHandlerStd {
         if (CollectionUtils.isNullOrEmpty(model.getPolicyDocument())) {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, POLICY_DOC_REQD);
         }
+
+        logger.log(String.format("%s::Create - Bucket %s", ResourceModel.TYPE_NAME, model.getBucket()));
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> preExistenceCheckForCreate(proxy, proxyClient, progress, request))
@@ -62,6 +57,8 @@ public class CreateHandler extends BaseHandlerStd {
 
         final ResourceModel model = progressEvent.getResourceModel();
         final CallbackContext context = progressEvent.getCallbackContext();
+
+        logger.log(String.format("%s::Create::preExistenceCheck - Bucket %s", ResourceModel.TYPE_NAME, model.getBucket()));
 
         return proxy.initiate("AWS-S3Outposts-BucketPolicy::Create::PreExistenceCheck", proxyClient, model, context)
                 .translateToServiceRequest(resourceModel ->
@@ -101,6 +98,8 @@ public class CreateHandler extends BaseHandlerStd {
 
         final ResourceModel model = progressEvent.getResourceModel();
         final CallbackContext context = progressEvent.getCallbackContext();
+
+        logger.log(String.format("%s::Create::createBucketPolicy - Bucket %s", ResourceModel.TYPE_NAME, model.getBucket()));
 
         return proxy.initiate("AWS-S3Outposts-BucketPolicy::Create", proxyClient, model, context)
                 .translateToServiceRequest(resourceModel ->
