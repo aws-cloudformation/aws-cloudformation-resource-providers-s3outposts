@@ -112,6 +112,11 @@
         "s3-outposts:CreateEndpoint"
       ]
     },
+    "read": {
+      "permissions": [
+        "s3-outposts:ListEndpoints"
+      ]
+    },
     "delete": {
       "permissions": [
         "s3-outposts:DeleteEndpoint"
