@@ -1,6 +1,5 @@
 package software.amazon.s3outposts.endpoint;
 
-import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,13 +7,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.s3outposts.S3OutpostsClient;
-import software.amazon.awssdk.services.s3outposts.model.Endpoint;
 import software.amazon.awssdk.services.s3outposts.model.ListEndpointsRequest;
 import software.amazon.awssdk.services.s3outposts.model.ListEndpointsResponse;
 import software.amazon.cloudformation.proxy.*;
 
 import java.time.Duration;
-import java.time.Instant;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,42 +23,6 @@ public class ListHandlerTest extends AbstractTestBase {
 
     private ListHandler handler;
     private ResourceHandlerRequest<ResourceModel> request;
-
-    private Endpoint endpoint1 = Endpoint.builder()
-            .endpointArn(ARN1)
-            .cidrBlock(CIDR_BLOCK1)
-            .creationTime(Instant.parse(CREATION_TIME1))
-            .networkInterfaces(NETWORK_INTERFACE_LIST1)
-            .outpostsId(OUTPOST_ID)
-            .status("Available")
-            .build();
-
-    private ResourceModel model1 = ResourceModel.builder()
-            .arn(ARN1)
-            .cidrBlock(CIDR_BLOCK1)
-            .creationTime(CREATION_TIME1)
-            .networkInterfaces(MODEL_NETWORK_INTERFACE_LIST1)
-            .outpostId(OUTPOST_ID)
-            .status("Available")
-            .build();
-
-    private Endpoint endpoint2 = Endpoint.builder()
-            .endpointArn(ARN2)
-            .cidrBlock(CIDR_BLOCK2)
-            .creationTime(Instant.parse(CREATION_TIME2))
-            .networkInterfaces(NETWORK_INTERFACE_LIST2)
-            .outpostsId(OUTPOST_ID)
-            .status("Pending")
-            .build();
-
-    private ResourceModel model2 = ResourceModel.builder()
-            .arn(ARN2)
-            .cidrBlock(CIDR_BLOCK2)
-            .creationTime(CREATION_TIME2)
-            .networkInterfaces(MODEL_NETWORK_INTERFACE_LIST2)
-            .outpostId(OUTPOST_ID)
-            .status("Pending")
-            .build();
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -96,7 +58,7 @@ public class ListHandlerTest extends AbstractTestBase {
 
         final ListEndpointsResponse listEndpointsResponse =
                 ListEndpointsResponse.builder()
-                        .endpoints(Lists.newArrayList(endpoint1, endpoint2))
+                        .endpoints(Arrays.asList(endpoint1, endpoint2))
                         .nextToken("fakeNextToken")
                         .build();
         when(proxyClient.client().listEndpoints(any(ListEndpointsRequest.class))).thenReturn(listEndpointsResponse);
@@ -108,7 +70,7 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(progress.getCallbackContext()).isNull();
         assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(progress.getResourceModel()).isNull();
+        assertThat(progress.getResourceModel()).isEqualTo(REQ_MODEL_EMPTY);
         assertThat(progress.getResourceModels()).isNotNull();
         assertThat(progress.getResourceModels()).contains(model1, model2);
         assertThat(progress.getMessage()).isNull();
@@ -120,6 +82,9 @@ public class ListHandlerTest extends AbstractTestBase {
 
     }
 
+    /**
+     * Happy Path - ListEndpointsResponse returns nextToken as "null"
+     */
     @Test
     public void handleRequest_SimpleSuccess_NullNextToken() {
 
@@ -130,7 +95,7 @@ public class ListHandlerTest extends AbstractTestBase {
 
         final ListEndpointsResponse listEndpointsResponse =
                 ListEndpointsResponse.builder()
-                        .endpoints(Lists.newArrayList(endpoint1, endpoint2))
+                        .endpoints(Arrays.asList(endpoint1, endpoint2))
                         .nextToken(null)
                         .build();
         when(proxyClient.client().listEndpoints(any(ListEndpointsRequest.class))).thenReturn(listEndpointsResponse);
@@ -142,7 +107,7 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(progress.getCallbackContext()).isNull();
         assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(progress.getResourceModel()).isNull();
+        assertThat(progress.getResourceModel()).isEqualTo(REQ_MODEL_EMPTY);
         assertThat(progress.getResourceModels()).isNotNull();
         assertThat(progress.getResourceModels()).contains(model1, model2);
         assertThat(progress.getMessage()).isNull();

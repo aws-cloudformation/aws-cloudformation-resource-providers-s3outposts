@@ -6,6 +6,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.services.s3outposts.S3OutpostsClient;
+import software.amazon.awssdk.services.s3outposts.model.Endpoint;
 import software.amazon.awssdk.services.s3outposts.model.NetworkInterface;
 import software.amazon.awssdk.services.s3outposts.model.S3OutpostsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -13,6 +14,7 @@ import software.amazon.cloudformation.proxy.Credentials;
 import software.amazon.cloudformation.proxy.LoggerProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -75,6 +77,43 @@ public class AbstractTestBase {
 
     }
 
+    // Endpoint Resources (used by ReadHandler & ListHandler)
+    protected Endpoint endpoint1 = Endpoint.builder()
+            .endpointArn(ARN1)
+            .cidrBlock(CIDR_BLOCK1)
+            .creationTime(Instant.parse(CREATION_TIME1))
+            .networkInterfaces(NETWORK_INTERFACE_LIST1)
+            .outpostsId(OUTPOST_ID)
+            .status("Available")
+            .build();
+
+    protected ResourceModel model1 = ResourceModel.builder()
+            .arn(ARN1)
+            .cidrBlock(CIDR_BLOCK1)
+            .creationTime(CREATION_TIME1)
+            .networkInterfaces(MODEL_NETWORK_INTERFACE_LIST1)
+            .outpostId(OUTPOST_ID)
+            .status("Available")
+            .build();
+
+    protected Endpoint endpoint2 = Endpoint.builder()
+            .endpointArn(ARN2)
+            .cidrBlock(CIDR_BLOCK2)
+            .creationTime(Instant.parse(CREATION_TIME2))
+            .networkInterfaces(NETWORK_INTERFACE_LIST2)
+            .outpostsId(OUTPOST_ID)
+            .status("Pending")
+            .build();
+
+    protected ResourceModel model2 = ResourceModel.builder()
+            .arn(ARN2)
+            .cidrBlock(CIDR_BLOCK2)
+            .creationTime(CREATION_TIME2)
+            .networkInterfaces(MODEL_NETWORK_INTERFACE_LIST2)
+            .outpostId(OUTPOST_ID)
+            .status("Pending")
+            .build();
+
     // Request Models
 
     protected static final ResourceModel REQ_MODEL_EMPTY = ResourceModel.builder().build();
@@ -85,6 +124,9 @@ public class AbstractTestBase {
             .build();
     protected static final ResourceModel REQ_MODEL_ARN = ResourceModel.builder()
             .arn(ARN1)
+            .build();
+    protected static final ResourceModel REQ_MODEL_NO_ARN = ResourceModel.builder()
+            .arn("")
             .build();
 
     // Response Models
