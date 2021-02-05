@@ -185,7 +185,6 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         verify(proxyClient.client()).createBucket(any(CreateBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
@@ -239,7 +238,6 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         verify(proxyClient.client()).createBucket(any(CreateBucketRequest.class));
         verify(proxyClient.client()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
@@ -293,7 +291,6 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         verify(proxyClient.client()).createBucket(any(CreateBucketRequest.class));
         verify(proxyClient.client()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
@@ -673,10 +670,10 @@ public class CreateHandlerTest extends AbstractTestBase {
     public void handleRequest_Tagging_SystemTags() {
 
         Tag sysTag1 = Tag.builder().key("aws:key1").value("value1").build();
-        Tag sysTag2 = Tag.builder().key("AWS:key2").value("value2").build();
+        Tag sysTag2 = Tag.builder().key("AWS:key2").value(ARN).build();
 
         S3Tag sysS3Tag1 = S3Tag.builder().key("aws:key1").value("value1").build();
-        S3Tag sysS3Tag2 = S3Tag.builder().key("AWS:key2").value("value2").build();
+        S3Tag sysS3Tag2 = S3Tag.builder().key("AWS:key2").value(ARN).build();
 
         List<Tag> allTagList = new ArrayList<Tag>() {{
             add(TAG1);
@@ -738,7 +735,6 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(progress.getErrorCode()).isNull();
 
         verify(proxyClient.client()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));

@@ -246,10 +246,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
     public void handleRequest_Tagging_SystemTags() {
 
         Tag sysTag1 = Tag.builder().key("aws:key1").value("value1").build();
-        Tag sysTag2 = Tag.builder().key("AWS:key2").value("value2").build();
+        Tag sysTag2 = Tag.builder().key("AWS:key2").value(ARN).build();
 
         S3Tag sysS3Tag1 = S3Tag.builder().key("aws:key1").value("value1").build();
-        S3Tag sysS3Tag2 = S3Tag.builder().key("AWS:key2").value("value2").build();
+        S3Tag sysS3Tag2 = S3Tag.builder().key("AWS:key2").value(ARN).build();
 
         List<Tag> allTagList = new ArrayList<Tag>() {{
             add(TAG1);

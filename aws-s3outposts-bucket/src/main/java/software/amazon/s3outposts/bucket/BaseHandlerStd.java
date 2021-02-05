@@ -141,12 +141,26 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final ResourceModel model = progress.getResourceModel();
         final CallbackContext callbackContext = progress.getCallbackContext();
 
-        logger.log(String.format("%s::Create/Update::PutBucketTagging - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+        logger.log(String.format("%s::Create/Update::putBucketTagging - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
 
         if (request.getDesiredResourceTags() == null && request.getSystemTags() == null)
             return ProgressEvent.progress(model, callbackContext);
 
-        return proxy.initiate("AWS-S3Outposts-Bucket::Create::PutBucketTagging", proxyClient, model, callbackContext)
+        if (request.getDesiredResourceTags() != null) {
+            logger.log(String.format("%s::Create/Update::putBucketTagging - Sending resource tags \n", ResourceModel.TYPE_NAME));
+            request.getDesiredResourceTags().entrySet().forEach(entry -> {
+                logger.log(String.format("{Key: %s, Value: %s} ", entry.getKey(), entry.getValue()));
+            });
+        }
+
+        if (request.getSystemTags() != null) {
+            logger.log(String.format("%s::Create/Update::putBucketTagging - Sending system tags \n", ResourceModel.TYPE_NAME));
+            request.getSystemTags().entrySet().forEach(entry -> {
+                logger.log(String.format("{Key: %s, Value: %s}", entry.getKey(), entry.getValue()));
+            });
+        }
+
+        return proxy.initiate("AWS-S3Outposts-Bucket::Create/Update::putBucketTagging", proxyClient, model, callbackContext)
                 .translateToServiceRequest(resourceModel ->
                         Translator.translateToSdkPutBucketTaggingRequest(resourceModel,
                                 request.getDesiredResourceTags(), request.getSystemTags(), request.getAwsAccountId())
@@ -180,7 +194,11 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final ResourceModel model = progress.getResourceModel();
         final CallbackContext callbackContext = progress.getCallbackContext();
 
-        logger.log(String.format("%s::Create/Update::PutBucketLifecycleConfiguration - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+        logger.log(String.format("%s::Create/Update::putLifecycleConfiguration - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+
+        if (model.getLifecycleConfiguration() == null)
+            return ProgressEvent.progress(model, callbackContext);
+
 
         return proxy.initiate("AWS-S3Outposts-Bucket::Create::PutBucketLifecycleConfiguration", proxyClient, model, callbackContext)
                 .translateToServiceRequest(resourceModel ->
