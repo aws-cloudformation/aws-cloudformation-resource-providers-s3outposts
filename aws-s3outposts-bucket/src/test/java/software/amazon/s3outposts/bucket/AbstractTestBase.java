@@ -51,9 +51,9 @@ public class AbstractTestBase {
         BUCKET_NAME = "bucket1";
         ARN = String.format("arn:aws:s3-outposts:%s:%s:outpost/%s/bucket/%s", REGION, ACCOUNT_ID, OUTPOST_ID, BUCKET_NAME);
         TAG1 = Tag.builder().key("key1").value("value1").build();
-        TAG2 = Tag.builder().key("key2").value("value2").build();
+        TAG2 = Tag.builder().key("key2").value(ARN).build();
         S3TAG1 = S3Tag.builder().key("key1").value("value1").build();
-        S3TAG2 = S3Tag.builder().key("key2").value("value2").build();
+        S3TAG2 = S3Tag.builder().key("key2").value(ARN).build();
         TAG_LIST = new ArrayList<Tag>() {{
             add(TAG1);
             add(TAG2);
@@ -64,7 +64,7 @@ public class AbstractTestBase {
             put(TAG2.getKey(), TAG2.getValue());
         }};
         FILTER_TAG1 = FilterTag.builder().key("key1").value("value1").build();
-        FILTER_TAG2 = FilterTag.builder().key("key2").value("value2").build();
+        FILTER_TAG2 = FilterTag.builder().key("key2").value(ARN).build();
         RULE1 = Rule.builder()
                 .id("1")
                 .abortIncompleteMultipartUpload(
