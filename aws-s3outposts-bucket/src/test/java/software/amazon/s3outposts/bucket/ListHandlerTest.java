@@ -8,10 +8,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
+import software.amazon.awssdk.services.s3control.model.InternalServiceException;
 import software.amazon.awssdk.services.s3control.model.ListRegionalBucketsRequest;
 import software.amazon.awssdk.services.s3control.model.ListRegionalBucketsResponse;
 import software.amazon.awssdk.services.s3control.model.RegionalBucket;
-import software.amazon.awssdk.services.s3control.model.S3ControlException;
 import software.amazon.cloudformation.proxy.*;
 
 import java.time.Duration;
@@ -93,6 +93,7 @@ public class ListHandlerTest extends AbstractTestBase {
         final ListRegionalBucketsResponse listRegionalBucketsResponse =
                 ListRegionalBucketsResponse.builder()
                         .regionalBucketList(Lists.newArrayList(regionalBucket1, regionalBucket2))
+                        .nextToken("fakeNextToken")
                         .build();
         when(proxyClient.client().listRegionalBuckets(any(ListRegionalBucketsRequest.class))).thenReturn(listRegionalBucketsResponse);
 
@@ -108,9 +109,10 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).contains(model1, model2);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertThat(response.getNextToken()).isNull();
+        assertThat(response.getNextToken()).isEqualTo("fakeNextToken");
 
         verify(proxyClient.client()).listRegionalBuckets(any(ListRegionalBucketsRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 
@@ -144,7 +146,8 @@ public class ListHandlerTest extends AbstractTestBase {
                 .desiredResourceState(REQUEST_MODEL)
                 .build();
 
-        when(proxyClient.client().listRegionalBuckets(any(ListRegionalBucketsRequest.class))).thenThrow(S3ControlException.builder().build());
+        when(proxyClient.client().listRegionalBuckets(any(ListRegionalBucketsRequest.class)))
+                .thenThrow(InternalServiceException.class);
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -156,10 +159,11 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
         assertThat(response.getNextToken()).isNull();
 
         verify(proxyClient.client()).listRegionalBuckets(any(ListRegionalBucketsRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 }

@@ -5,6 +5,7 @@
   "definitions": {
     "VpcConfiguration": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "VpcId": {
           "description": "Virtual Private Cloud (VPC) Id from which AccessPoint will allow requests.",

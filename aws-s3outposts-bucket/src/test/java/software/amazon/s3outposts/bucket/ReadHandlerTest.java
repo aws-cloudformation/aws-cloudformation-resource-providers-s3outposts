@@ -6,14 +6,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
-import software.amazon.awssdk.services.s3control.model.GetBucketRequest;
-import software.amazon.awssdk.services.s3control.model.GetBucketResponse;
-import software.amazon.awssdk.services.s3control.model.NotFoundException;
-import software.amazon.awssdk.services.s3control.model.S3ControlException;
+import software.amazon.awssdk.services.s3control.model.*;
 import software.amazon.cloudformation.proxy.*;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -23,17 +22,6 @@ public class ReadHandlerTest extends AbstractTestBase {
 
     private ReadHandler handler;
     private ResourceHandlerRequest<ResourceModel> request;
-
-    // Constants
-    private static final ResourceModel REQUEST_SUCCESS_MODEL = ResourceModel.builder()
-            .arn(ARN)
-            .build();
-
-    private static final ResourceModel RESPONSE_SUCCESS_MODEL = ResourceModel.builder()
-            .arn(ARN)
-            .bucketName(BUCKET_NAME)
-            .outpostId(OUTPOST_ID)
-            .build();
 
     // Mock variables
     @Mock
@@ -56,109 +44,427 @@ public class ReadHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void tear_down() {
-        verify(sdkClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(sdkClient);
     }
 
-    // Tests
+    /**
+     * Validation Error - No Arn provided
+     */
     @Test
-    public void handleRequest_SimpleSuccess() {
+    public void handleRequest_NoBucketArn() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(REQUEST_SUCCESS_MODEL)
+                .desiredResourceState(REQ_BUCKET_MODEL_NO_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThat(progress.getMessage()).isEqualTo("Bucket ARN is required.");
+        assertThat(progress.getCallbackContext()).isEqualTo(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+
+    }
+
+    /**
+     * Happy Path - Return bucket with no tags, no lifecycle configuration
+     */
+    @Test
+    public void handleRequest_SimpleSuccess_NoTags() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
         when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
+        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().build();
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
+
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
+                .thenThrow(constructS3ControlExceptionWithStatusCode(404));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(RESPONSE_SUCCESS_MODEL);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isNull();
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_EMPTY_TAGS);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 
+    /**
+     * Happy Path - Return bucket with tags, no lifecycle configuration
+     */
+    @Test
+    public void handleRequest_SimpleSuccess_WithTags() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST).build();
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
+
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
+                .thenThrow(constructS3ControlExceptionWithStatusCode(404));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isNull();
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_WITH_TAGS);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Error Path - GetBucket returns NotFound
+     */
     @Test
     public void handleRequest_NotFound() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(REQUEST_SUCCESS_MODEL)
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         when(proxyClient.client().getBucket(any(GetBucketRequest.class)))
                 .thenThrow(NotFoundException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client(), never()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 
+    /**
+     * Error Path - GetBucket returns 400
+     */
     @Test
     public void handleRequest_400() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(REQUEST_SUCCESS_MODEL)
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         when(proxyClient.client().getBucket(any(GetBucketRequest.class)))
                 .thenThrow(S3ControlException.builder().statusCode(400).build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client(), never()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
 
     }
 
+    /**
+     * Error Path - GetBucket returns 404
+     */
     @Test
     public void handleRequest_404() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(REQUEST_SUCCESS_MODEL)
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
                 .build();
 
         when(proxyClient.client().getBucket(any(GetBucketRequest.class)))
                 .thenThrow(S3ControlException.builder().statusCode(404).build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
 
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client(), never()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
 
     }
+
+    /**
+     * Error Path - GetBucketTagging returns TooManyTags
+     */
+    @Test
+    public void handleRequest_Error_Tagging_TooManyTags() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class)))
+                .thenThrow(TooManyTagsException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("TooManyTags").build()).build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceLimitExceeded);
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Error Path - GetBucketTagging returns NoSuchTagSet
+     */
+    @Test
+    public void handleRequest_Error_Tagging_NoSuchTagSet() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class)))
+                .thenThrow(constructS3ControlExceptionWithErrorCode("NoSuchTagSet"));
+
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
+                .thenThrow(constructS3ControlExceptionWithStatusCode(404));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isNull();
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_NO_TAGS_AND_RULES);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Happy Path - Lifecycle Configuration with no rules
+     */
+    @Test
+    public void handleRequest_Lifecycle_NoRuleList() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().build();
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
+
+        final GetBucketLifecycleConfigurationResponse getBucketLifecycleConfigurationResponse =
+                GetBucketLifecycleConfigurationResponse.builder().build();
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
+                .thenReturn(getBucketLifecycleConfigurationResponse);
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isNull();
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_EMPTY_TAGS_AND_RULES);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Happy Path - Lifecycle configuration with empty rule list
+     */
+    @Test
+    public void handleRequest_Lifecycle_EmptyRuleList() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class)))
+                .thenThrow(S3ControlException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("NoSuchTagSet").build()).build());
+
+        final GetBucketLifecycleConfigurationResponse getBucketLifecycleConfigurationResponse = GetBucketLifecycleConfigurationResponse.builder().rules(Collections.emptyList()).build();
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class))).thenReturn(getBucketLifecycleConfigurationResponse);
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isNull();
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_EMPTY_RULES);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Happy Path - Lifecycle configuration with rules
+     */
+    @Test
+    public void handleRequest_Lifecycle_Rules() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class)))
+                .thenThrow(S3ControlException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("NoSuchTagSet").build()).build());
+
+        final GetBucketLifecycleConfigurationResponse getBucketLifecycleConfigurationResponse = GetBucketLifecycleConfigurationResponse.builder().rules(LIFECYCLE_RULE_LIST).build();
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class))).thenReturn(getBucketLifecycleConfigurationResponse);
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isNull();
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_RULES);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Error Path - GetBucketLifecycleConfiguration returns InternalServiceException
+     */
+    @Test
+    public void handleRequest_Lifecycle_Error() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class)))
+                .thenThrow(S3ControlException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("NoSuchTagSet").build()).build());
+
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
+                .thenThrow(InternalServiceException.class);
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
 }

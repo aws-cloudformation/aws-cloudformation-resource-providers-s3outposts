@@ -51,11 +51,14 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void tear_down() {
-//        verify(sdkClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(sdkClient);
     }
 
     // Tests
+
+    /**
+     * Happy Path
+     */
     @Test
     public void handleRequest_SimpleSuccess() {
 
@@ -80,6 +83,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     }
 
+    /**
+     * Validation error - No Arn
+     */
     @Test
     public void handleRequest_NoArn() {
 
@@ -99,6 +105,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     }
 
+    /**
+     * Error Path - Bad Request
+     */
     @Test
     public void handleRequest_BadRequest() {
 
@@ -123,6 +132,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     }
 
+    /**
+     * Error Path - Status code 400
+     */
     @Test
     public void handleRequest_400() {
 
@@ -147,6 +159,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     }
 
+    /**
+     * Error Path - BucketNotEmpty
+     */
     @Test
     public void handleRequest_BucketNotEmpty() {
 
@@ -172,6 +187,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     }
 
+    /**
+     * Error Path - Invalid Bucket State
+     */
     @Test
     public void handleRequest_InvalidBucketState() {
 
@@ -197,6 +215,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     }
 
+    /**
+     * Error Path - NoSuchBucket
+     */
     @Test
     public void handleRequest_NoSuchBucket() {
 
