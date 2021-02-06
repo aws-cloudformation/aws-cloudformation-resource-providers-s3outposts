@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
 import software.amazon.awssdk.services.s3control.model.BadRequestException;
 import software.amazon.awssdk.services.s3control.model.DeleteBucketRequest;
@@ -160,7 +161,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
     }
 
     /**
-     * Error Path - BucketNotEmpty
+     * Error Path - 409 - BucketNotEmpty
      */
     @Test
     public void handleRequest_BucketNotEmpty() {
@@ -169,7 +170,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         when(proxyClient.client().deleteBucket(any(DeleteBucketRequest.class)))
                 .thenThrow(S3ControlException.builder().statusCode(409)
-                        .message("BucketNotEmpty").build());
+                        .awsErrorDetails(AwsErrorDetails.builder().errorCode("BucketNotEmpty").build())
+                        .build());
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -179,7 +181,6 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isEqualTo("BucketNotEmpty");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ResourceConflict);
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
@@ -188,7 +189,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
     }
 
     /**
-     * Error Path - Invalid Bucket State
+     * Error Path - 409 - Invalid Bucket State
      */
     @Test
     public void handleRequest_InvalidBucketState() {
@@ -197,18 +198,19 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
         when(proxyClient.client().deleteBucket(any(DeleteBucketRequest.class)))
                 .thenThrow(S3ControlException.builder().statusCode(409)
-                        .message("InvalidBucketState").build());
+                        .awsErrorDetails(AwsErrorDetails.builder().errorCode("InvalidBucketState").build())
+                        .build());
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
         assertThat(response.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(20);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isEqualTo("InvalidBucketState");
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ResourceConflict);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
 
         verify(proxyClient.client()).deleteBucket(any(DeleteBucketRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();

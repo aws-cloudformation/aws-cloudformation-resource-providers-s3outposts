@@ -16,6 +16,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     // Error Codes
     protected static final String NO_SUCH_TAGSET = "NoSuchTagSet";
     protected static final String NO_SUCH_LIFECYCLE_CONFIGURATION = "NoSuchLifecycleConfiguration";
+    protected static final String INVALID_BUCKET_STATE = "InvalidBucketState";
 
     // Constants
     protected static final int CALLBACK_DELAY_SECONDS = 20;
