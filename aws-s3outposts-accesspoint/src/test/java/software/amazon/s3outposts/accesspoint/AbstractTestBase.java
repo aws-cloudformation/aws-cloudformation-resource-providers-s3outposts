@@ -157,6 +157,13 @@ public class AbstractTestBase {
         return S3ControlException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode(errorCode).build()).build();
     }
 
+    protected static Exception constructS3ControlException(Integer statusCode, String errorCode, String errorMsg) {
+        return S3ControlException.builder()
+                .statusCode(statusCode)
+                .awsErrorDetails(AwsErrorDetails.builder().errorCode(errorCode).errorMessage(errorMsg).build())
+                .build();
+    }
+
     static ProxyClient<S3ControlClient> MOCK_PROXY(
             final AmazonWebServicesClientProxy proxy,
             final S3ControlClient sdkClient) {
