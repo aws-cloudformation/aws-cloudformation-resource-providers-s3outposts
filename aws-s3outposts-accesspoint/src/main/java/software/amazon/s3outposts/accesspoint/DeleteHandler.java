@@ -2,6 +2,7 @@ package software.amazon.s3outposts.accesspoint;
 
 import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
+import software.amazon.awssdk.services.s3control.model.S3ControlException;
 import software.amazon.cloudformation.proxy.*;
 
 public class DeleteHandler extends BaseHandlerStd {
@@ -56,7 +57,18 @@ public class DeleteHandler extends BaseHandlerStd {
                 .makeServiceCall((deleteAccessPointRequest, s3ControlProxyClient) ->
                         s3ControlProxyClient.injectCredentialsAndInvokeV2(deleteAccessPointRequest, s3ControlProxyClient.client()::deleteAccessPoint)
                 )
-                .handleError(this::handleError)
+                .handleError((deleteAccessPointRequest, exception, s3ControlProxyClient, resourceModel, cbContext) -> {
+                    if (exception instanceof S3ControlException && ((S3ControlException) exception).statusCode() == 400 &&
+                            ((S3ControlException) exception).awsErrorDetails().errorCode().equals(INVALID_REQUEST) &&
+                            ((S3ControlException) exception).awsErrorDetails().errorMessage().equals(INVALID_ACCESSPOINT_STATE)) {
+                        logger.log(String.format("%s::Delete::handleRequest - Error Msg: %s",
+                                ResourceModel.TYPE_NAME, ((S3ControlException) exception).awsErrorDetails().errorMessage()));
+                        return ProgressEvent.defaultInProgressHandler(cbContext, 20, resourceModel);
+                    }
+                    logger.log(String.format("%s::Delete::handleRequest - Error type: %s", ResourceModel.TYPE_NAME, exception.getClass().getCanonicalName()));
+                    return handleError(deleteAccessPointRequest, exception, s3ControlProxyClient, resourceModel, cbContext);
+
+                })
                 .done(deleteAccessPointResponse -> ProgressEvent.defaultSuccessHandler(null));
     }
 
