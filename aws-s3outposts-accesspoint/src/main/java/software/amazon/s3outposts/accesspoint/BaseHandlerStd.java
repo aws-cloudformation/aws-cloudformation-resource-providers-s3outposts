@@ -18,12 +18,14 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected static final String TOO_MANY_ACCESSPOINTS = "TooManyAccessPoints";
     protected static final String MALFORMED_POLICY_ERROR_CODE = "MalformedPolicy";
     protected static final String ACCESS_DENIED_ERROR_CODE = "AccessDenied";
+    protected static final String INVALID_REQUEST = "InvalidRequest";
 
     // Error messages returned to the customer.
     protected static final String ACCESSPOINT_ARN_REQD = "AccessPoint ARN is required.";
     protected static final String ACCESSPOINT_NAME_REQD = "AccessPoint Name is required.";
     protected static final String BUCKET_ARN_REQD = "Bucket ARN is required.";
     protected static final String VPC_CONFIGURATION_REQD = "VpcConfiguration is required.";
+    protected static final String INVALID_ACCESSPOINT_STATE = "Access Point is not in a state where it can be deleted";
 
     // Constants
     protected static final int CALLBACK_DELAY_SECONDS = 20;

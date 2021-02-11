@@ -126,4 +126,93 @@ public class DeleteHandlerTest extends AbstractTestBase {
         verify(sdkClient, atLeastOnce()).serviceName();
 
     }
+
+    /**
+     * Error - 400 BadRequest - InvalidAccessPointState
+     */
+    @Test
+    public void handleRequest_Error_InvalidAccessPointState() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class)))
+                .thenThrow(constructS3ControlException(400, "InvalidRequest", "Access Point is not in a state where it can be deleted"));
+
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(20);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).deleteAccessPoint(any(DeleteAccessPointRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Error - 400 BadRequest - InvalidRequest with wrong message
+     */
+    @Test
+    public void handleRequest_Error_InvalidRequest_WrongMessage() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class)))
+                .thenThrow(constructS3ControlException(400, "InvalidRequest", "Access Point is in an invalid state"));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
+
+        verify(proxyClient.client()).deleteAccessPoint(any(DeleteAccessPointRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Error - 400 BadRequest - BadRequest with correct message
+     */
+    @Test
+    public void handleRequest_Error_BadRequest_CorrectMessage() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class)))
+                .thenThrow(constructS3ControlException(400, "BadRequest", "Access Point is not in a state where it can be deleted"));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
+
+        verify(proxyClient.client()).deleteAccessPoint(any(DeleteAccessPointRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
 }
