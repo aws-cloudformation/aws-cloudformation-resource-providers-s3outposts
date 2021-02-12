@@ -162,8 +162,8 @@ public class Translator {
         Map<String, String> allTags = new HashMap<>();
         if (resourceTags != null)
             allTags.putAll(resourceTags);
-        if (systemTags != null)
-            allTags.putAll(systemTags);
+//        if (systemTags != null)
+//            allTags.putAll(systemTags);
 
         // Create a List of S3Tag objects from a Map<String, String>
         // Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/model/S3Tag.html
