@@ -102,7 +102,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getErrorCode()).isNull();
 
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -122,11 +122,11 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .awsAccountId(ACCOUNT_ID)
                 .build();
 
-        final PutBucketTaggingResponse putBucketTaggingResponse = PutBucketTaggingResponse.builder().build();
-        when(proxyClient.client().putBucketTagging(any(PutBucketTaggingRequest.class))).thenReturn(putBucketTaggingResponse);
-
         final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
         when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        final PutBucketTaggingResponse putBucketTaggingResponse = PutBucketTaggingResponse.builder().build();
+        when(proxyClient.client().putBucketTagging(any(PutBucketTaggingRequest.class))).thenReturn(putBucketTaggingResponse);
 
         final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST).build();
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
@@ -146,8 +146,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -166,11 +166,11 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .awsAccountId(ACCOUNT_ID)
                 .build();
 
-        final DeleteBucketTaggingResponse deleteBucketTaggingResponse = DeleteBucketTaggingResponse.builder().build();
-        when(proxyClient.client().deleteBucketTagging(any(DeleteBucketTaggingRequest.class))).thenReturn(deleteBucketTaggingResponse);
-
         final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
         when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        final DeleteBucketTaggingResponse deleteBucketTaggingResponse = DeleteBucketTaggingResponse.builder().build();
+        when(proxyClient.client().deleteBucketTagging(any(DeleteBucketTaggingRequest.class))).thenReturn(deleteBucketTaggingResponse);
 
         final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().build();
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
@@ -190,8 +190,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).deleteBucketTagging(any(DeleteBucketTaggingRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -231,8 +231,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -281,11 +281,11 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .awsAccountId(ACCOUNT_ID)
                 .build();
 
-        final PutBucketTaggingResponse putBucketTaggingResponse = PutBucketTaggingResponse.builder().build();
-        when(proxyClient.client().putBucketTagging(any(PutBucketTaggingRequest.class))).thenReturn(putBucketTaggingResponse);
-
         final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
         when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        final PutBucketTaggingResponse putBucketTaggingResponse = PutBucketTaggingResponse.builder().build();
+        when(proxyClient.client().putBucketTagging(any(PutBucketTaggingRequest.class))).thenReturn(putBucketTaggingResponse);
 
         final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(allS3TagList).build();
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
@@ -305,8 +305,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -314,10 +314,43 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     /**
-     * Error Path - No changes, GetBucket returns failure
+     * Error Path - No changes, GetBucket returns S3ControlException with a 404 status code
      */
     @Test
     public void handleRequest_Error_GetBucket() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(BUCKET_MODEL_NO_TAGS_AND_RULES)
+                .previousResourceState(BUCKET_MODEL_NO_TAGS_AND_RULES)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class)))
+                .thenThrow(constructS3ControlExceptionWithStatusCode(404));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isEqualTo("Bucket does not exist.");
+        assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
+        verify(proxyClient.client(), never()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Error Path - No changes, GetBucket returns NotFoundException
+     */
+    @Test
+    public void handleRequest_Exception_GetBucket() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(BUCKET_MODEL_NO_TAGS_AND_RULES)
@@ -336,11 +369,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getCallbackContext()).isEqualToComparingOnlyGivenFields(new CallbackContext());
         assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(progress.getResourceModels()).isNull();
-        assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
 
-        verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
         verify(proxyClient.client(), never()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
 
@@ -359,6 +391,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .awsAccountId(ACCOUNT_ID)
                 .build();
 
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
         when(proxyClient.client().putBucketTagging(any(PutBucketTaggingRequest.class)))
                 .thenThrow(TooManyTagsException.class);
 
@@ -373,8 +408,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_WITH_TAGS);
         assertThat(progress.getResourceModels()).isNull();
 
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client(), never()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
 
@@ -411,8 +446,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -430,13 +465,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .previousResourceState(BUCKET_MODEL_NO_RULES)
                 .build();
 
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
         final PutBucketLifecycleConfigurationResponse putBucketLifecycleConfigurationResponse =
                 PutBucketLifecycleConfigurationResponse.builder().build();
         when(proxyClient.client().putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class)))
                 .thenReturn(putBucketLifecycleConfigurationResponse);
-
-        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
-        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
 
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class)))
                 .thenThrow(S3ControlException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("NoSuchTagSet").build()).build());
@@ -457,9 +492,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
         verify(proxyClient.client()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -477,13 +512,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .previousResourceState(BUCKET_MODEL_RULES)
                 .build();
 
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
         final DeleteBucketLifecycleConfigurationResponse deleteBucketLifecycleConfigurationResponse =
                 DeleteBucketLifecycleConfigurationResponse.builder().build();
         when(proxyClient.client().deleteBucketLifecycleConfiguration(any(DeleteBucketLifecycleConfigurationRequest.class)))
                 .thenReturn(deleteBucketLifecycleConfigurationResponse);
-
-        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
-        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
 
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class)))
                 .thenThrow(S3ControlException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("NoSuchTagSet").build()).build());
@@ -503,10 +538,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
         verify(proxyClient.client(), never()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
         verify(proxyClient.client()).deleteBucketLifecycleConfiguration(any(DeleteBucketLifecycleConfigurationRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -547,9 +582,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
         verify(proxyClient.client(), never()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -590,9 +625,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client(), atLeast(2)).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
         verify(proxyClient.client()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
-        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
@@ -610,6 +645,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .previousResourceState(BUCKET_MODEL_RULES)
                 .build();
 
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
         when(proxyClient.client().deleteBucketLifecycleConfiguration(any(DeleteBucketLifecycleConfigurationRequest.class)))
                 .thenThrow(InternalServiceException.class);
 
@@ -624,10 +662,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_EMPTY_RULES);
         assertThat(progress.getResourceModels()).isNull();
 
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).putBucketTagging(any(PutBucketTaggingRequest.class));
         verify(proxyClient.client(), never()).putBucketLifecycleConfiguration(any(PutBucketLifecycleConfigurationRequest.class));
         verify(proxyClient.client()).deleteBucketLifecycleConfiguration(any(DeleteBucketLifecycleConfigurationRequest.class));
-        verify(proxyClient.client(), never()).getBucket(any(GetBucketRequest.class));
         verify(proxyClient.client(), never()).getBucketTagging(any(GetBucketTaggingRequest.class));
         verify(proxyClient.client(), never()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();

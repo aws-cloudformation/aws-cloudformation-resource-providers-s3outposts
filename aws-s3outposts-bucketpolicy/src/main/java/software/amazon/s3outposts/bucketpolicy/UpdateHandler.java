@@ -69,7 +69,7 @@ public class UpdateHandler extends BaseHandlerStd {
                             StringUtils.equals(((S3ControlException) exception).awsErrorDetails().errorCode(), NO_SUCH_BUCKET_POLICY_ERROR_CODE)) {
                         return ProgressEvent.failed(resourceModel, cbContext, HandlerErrorCode.NotFound, BUCKET_POLICY_MISSING);
                     }
-                    throw exception;
+                    return handleError(getBucketPolicyRequest, exception, client, resourceModel, cbContext);
                 })
                 .progress();
     }

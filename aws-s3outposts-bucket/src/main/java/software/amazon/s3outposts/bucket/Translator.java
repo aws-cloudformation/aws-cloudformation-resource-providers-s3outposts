@@ -308,7 +308,7 @@ public class Translator {
                 .map(lifecycleRule ->
                         Rule.builder()
                                 .abortIncompleteMultipartUpload(translateFromSdkAbortIncompleteMultipartUpload(lifecycleRule.abortIncompleteMultipartUpload()))
-                                .expirationInDays(Optional.of(lifecycleRule).map(LifecycleRule::expiration).map(LifecycleExpiration::days).orElse(null))
+                                .expirationInDays(getExpirationInDays(Optional.of(lifecycleRule).map(LifecycleRule::expiration).map(LifecycleExpiration::days)))
                                 .expirationDate(Optional.of(lifecycleRule).map(LifecycleRule::expiration).map(LifecycleExpiration::date).map(Instant::toString).orElse(null))
                                 .filter(translateFromSdkLifecycleRuleFilter(lifecycleRule.filter()))
                                 .id(lifecycleRule.id())
@@ -316,6 +316,26 @@ public class Translator {
                                 .build()
                 )
                 .collect(Collectors.toList());
+
+    }
+
+    /**
+     * If the SDK response for LifecycleExpiration::days is null or 0, we return null for the Integer field expirationInDays.
+     * If we don't, then 0 gets returned as the default value for an Integer type which is not allowed for the field expirationInDays and
+     * this also ends up breaking the Uluru contract tests.
+     */
+    private static Integer getExpirationInDays(Optional<Integer> optExpirationInDays) {
+
+        if (optExpirationInDays.isPresent()) {
+
+            if (optExpirationInDays.get() > 0) {
+
+                return optExpirationInDays.get();
+
+            }
+        }
+
+        return null;
 
     }
 
