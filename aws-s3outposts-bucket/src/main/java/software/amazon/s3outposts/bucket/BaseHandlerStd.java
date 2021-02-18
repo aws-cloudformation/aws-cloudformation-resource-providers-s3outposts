@@ -12,6 +12,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected static final String BUCKET_ARN_REQD = "Bucket ARN is required.";
     protected static final String BUCKET_NAME_REQD = "Bucket Name is required.";
     protected static final String OUTPOSTID_REQD = "OutpostId is required.";
+    protected static final String BUCKET_DOES_NOT_EXIST = "Bucket does not exist.";
 
     // Error Codes
     protected static final String NO_SUCH_TAGSET = "NoSuchTagSet";
@@ -118,6 +119,47 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             callbackContext.setPropagated(true);
         }
         return ProgressEvent.defaultInProgressHandler(callbackContext, CALLBACK_DELAY_SECONDS, progressEvent.getResourceModel());
+    }
+
+    /**
+     * Calls the API getBucket
+     *
+     * @param proxy
+     * @param proxyClient
+     * @param request
+     * @param progress
+     * @param logger
+     * @return
+     */
+    protected ProgressEvent<ResourceModel, CallbackContext> getBucket(
+            AmazonWebServicesClientProxy proxy,
+            ProxyClient<S3ControlClient> proxyClient,
+            ResourceHandlerRequest<ResourceModel> request,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
+            Logger logger) {
+
+        final ResourceModel model = progress.getResourceModel();
+        final CallbackContext callbackContext = progress.getCallbackContext();
+        logger.log(String.format("%s::Read::getBucket - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+
+        // Initiate the callGraph and get the callContext
+        return proxy.initiate("AWS-S3Outposts-Bucket::Read::GetBucket", proxyClient, model, callbackContext)
+                // Form GetBucketRequest
+                .translateToServiceRequest(resourceModel -> Translator.translateToReadRequest(resourceModel, request.getAwsAccountId()))
+                // Issue call getBucket
+                .makeServiceCall((getBucketRequest, s3ControlProxyClient) ->
+                        s3ControlProxyClient.injectCredentialsAndInvokeV2(getBucketRequest, s3ControlProxyClient.client()::getBucket)
+                )
+                .handleError((getBucketRequest, exception, s3ControlProxyClient, resourceModel, cbContext) -> {
+                    logger.log(String.format("%s - ReadHandler - Error Type: %s", ResourceModel.TYPE_NAME, exception.getClass().getCanonicalName()));
+                    return handleError(getBucketRequest, exception, s3ControlProxyClient, resourceModel, cbContext);
+                })
+                .done(getBucketResponse -> {
+                    // We send the Arn since the GetBucketResponse doesn't contain the Arn
+                    final ResourceModel getBucketResponseModel = Translator.translateFromReadResponse(getBucketResponse, model.getArn());
+                    return ProgressEvent.progress(getBucketResponseModel, callbackContext);
+                });
+
     }
 
     /**
