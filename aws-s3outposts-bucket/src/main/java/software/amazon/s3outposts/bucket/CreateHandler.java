@@ -75,7 +75,6 @@ public class CreateHandler extends BaseHandlerStd {
                 )
                 .stabilize((createBucketRequest, createBucketResponse, s3ControlProxyClient, resourceModel, cbContext) -> {
                     if (createBucketResponse.bucketArn() != null) {
-                        // AN TODO: [P0]: Remove the following line of code before making the resource public.
                         String arn = createBucketResponse.bucketArn().replaceFirst("/ec2/", String.format("/%s/", resourceModel.getOutpostId()));
                         resourceModel.setArn(arn);
                         logger.log(String.format("CreateHandler - Modified ARN: %s", resourceModel.getArn()));

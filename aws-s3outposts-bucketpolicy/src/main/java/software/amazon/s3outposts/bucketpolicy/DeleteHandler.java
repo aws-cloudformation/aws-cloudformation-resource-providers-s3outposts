@@ -90,9 +90,6 @@ public class DeleteHandler extends BaseHandlerStd {
                 .makeServiceCall(((deleteBucketPolicyRequest, s3ControlProxyClient) ->
                         s3ControlProxyClient.injectCredentialsAndInvokeV2(deleteBucketPolicyRequest, s3ControlProxyClient.client()::deleteBucketPolicy)))
                 .handleError(this::handleError)
-//                AN TODO: [P3]: Although not necessary, we can add a stabilization check to make sure the policy is deleted.
-//                Ref: https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-codeartifact/blob/9d5e545c8e5f570ef4980f38df79ff8722360d7f/aws-codeartifact-domain/src/main/java/software/amazon/codeartifact/domain/DeleteHandler.java#L57
-//                .stabilize()
                 .done(deleteBucketResponse -> ProgressEvent.defaultSuccessHandler(null));
 
     }

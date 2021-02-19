@@ -71,9 +71,6 @@ public class CreateHandler extends BaseHandlerStd {
                         s3ControlProxyClient.injectCredentialsAndInvokeV2(createAccessPointRequest, s3ControlProxyClient.client()::createAccessPoint)))
                 .stabilize((createAccessPointRequest, createAccessPointResponse, s3ControlProxyClient, resourceModel, cbContext) -> {
                     if (createAccessPointResponse.accessPointArn() != null) {
-                        // AN TODO: [P0]: Remove the following block of code before making the resource public.
-                        // Start: Code Block
-                        // Get outpostId from bucket arn and replace `ec2` with outpostId in accesspoint arn.
                         final BucketArnFields arnFields = BucketArnFields.splitArn(model.getBucket());
                         String accessPointArn = createAccessPointResponse.accessPointArn()
                                 .replaceFirst("/ec2/", String.format("/%s/", arnFields.outpostId));

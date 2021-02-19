@@ -29,11 +29,6 @@ public class UpdateHandler extends BaseHandlerStd {
             return ProgressEvent.failed(newModel, callbackContext, HandlerErrorCode.InvalidRequest, POLICY_DOC_REQD);
         }
 
-        // AN TODO: [P2]: Assigning a new bucket to the same CFN stack is (I think) an allowed operation. It results in
-        // an Update and Replace. The previous bucket and bucketPolicy should stay intact in the DDB.
-        // Test this and make sure this works. Not including the corresponding code from S3:
-        // Ref: https://tiny.amazon.com/40949biy
-
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
                 .then(progress -> preExistenceCheckForUpdate(proxy, proxyClient, progress, request))
                 .then(progress -> updateBucketPolicy(proxy, proxyClient, progress, request))

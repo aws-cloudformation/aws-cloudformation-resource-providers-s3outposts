@@ -49,7 +49,7 @@ public class Translator {
     static GetBucketRequest translateToReadRequest(final ResourceModel model,
                                                    final String accountId) {
         String arn = model.getArn();
-        // AN TODO: [P0]: We should remove the EC2 specific code before releasing the resource.
+
         if ((model.getOutpostId() != null) && (arn != null)) {
             arn = arn.replaceFirst("/ec2/", String.format("/%s/", model.getOutpostId()));
             model.setArn(arn);
@@ -162,8 +162,8 @@ public class Translator {
         Map<String, String> allTags = new HashMap<>();
         if (resourceTags != null)
             allTags.putAll(resourceTags);
-//        if (systemTags != null)
-//            allTags.putAll(systemTags);
+        if (systemTags != null)
+            allTags.putAll(systemTags);
 
         // Create a List of S3Tag objects from a Map<String, String>
         // Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/model/S3Tag.html
