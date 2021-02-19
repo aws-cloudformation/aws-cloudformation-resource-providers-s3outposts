@@ -200,14 +200,11 @@ public class Translator {
                                                   final ResourceModel model) {
 
 
-        // AN TODO: [P0]: Please revisit this code block prior to making the resource public.
-        // We do need the statement to get the accessPointArn for real outposts as well.
-        // Start: Code Block
         // Get outpostId from bucket arn and replace `ec2` with outpostId in accesspoint arn.
+        // => Revisit and determine whether we need the next 2 lines of code.
         final BucketArnFields arnFields = BucketArnFields.splitArn(model.getBucket());
         final String accessPointArn = accessPoint.accessPointArn()
                 .replaceFirst("/ec2/", String.format("/%s/", arnFields.outpostId));
-        // End: Code Block
 
         return ResourceModel.builder()
                 .arn(accessPointArn)
