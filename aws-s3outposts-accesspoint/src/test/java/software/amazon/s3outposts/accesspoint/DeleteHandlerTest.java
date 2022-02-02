@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
-import software.amazon.awssdk.services.s3control.model.DeleteAccessPointRequest;
-import software.amazon.awssdk.services.s3control.model.DeleteAccessPointResponse;
+import software.amazon.awssdk.services.s3control.model.*;
 import software.amazon.cloudformation.proxy.*;
 
 import java.time.Duration;
@@ -57,11 +57,14 @@ public class DeleteHandlerTest extends AbstractTestBase {
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
+        final CallbackContext callbackContext = new CallbackContext();
+        callbackContext.setStabilizationCount(STABILIZATION_COUNT);
+
         assertThat(progress).isNotNull();
         assertThat(progress.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(progress.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
         assertThat(progress.getMessage()).isEqualTo("AccessPoint ARN is required.");
-        assertThat(progress.getCallbackContext()).isEqualTo(new CallbackContext());
+        assertThat(progress.getCallbackContext()).isEqualTo(callbackContext);
         assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(progress.getResourceModels()).isNull();
 
@@ -71,7 +74,47 @@ public class DeleteHandlerTest extends AbstractTestBase {
      * Happy Path
      */
     @Test
-    public void handleRequest_SimpleSuccess() {
+    public void handleRequest_SuccessAfterMaxStabilizationRetries_Pending() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(AP_ONLY_ARN_MODEL)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        CallbackContext callbackContext = new CallbackContext();
+        callbackContext.setStabilizationCount(2);
+
+        final DeleteAccessPointResponse deleteAccessPointResponse = DeleteAccessPointResponse.builder().build();
+        when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class)))
+                .thenReturn(deleteAccessPointResponse);
+
+        final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder().build();
+        when(proxyClient.client().getAccessPoint(any(GetAccessPointRequest.class)))
+                .thenReturn(getAccessPointResponse);
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, callbackContext, proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
+        assertThat(progress.getCallbackContext().stabilized).isEqualTo(false);
+        assertThat(progress.getCallbackContext().propagated).isEqualTo(false);
+        assertThat(progress.getCallbackContext().forcedDelayCount).isEqualTo(1);
+        assertThat(progress.getCallbackContext().stabilizationCount).isEqualTo(0);
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(20);
+        assertThat(progress.getResourceModel()).isEqualTo(AP_ONLY_ARN_MODEL);
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).deleteAccessPoint(any(DeleteAccessPointRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+    }
+
+    /**
+     * Happy Path
+     */
+    @Test
+    public void handleRequest_SimpleSuccess_Complete() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(AP_ONLY_ARN_MODEL)
@@ -82,8 +125,20 @@ public class DeleteHandlerTest extends AbstractTestBase {
         when(proxyClient.client().deleteAccessPoint(any(DeleteAccessPointRequest.class)))
                 .thenReturn(deleteAccessPointResponse);
 
+        S3ControlException s3ControlException = (S3ControlException) S3ControlException.builder()
+                .awsErrorDetails(AwsErrorDetails.builder().errorCode(NO_SUCH_ACCESSPOINT).build())
+                .build();
+        when(proxyClient.client().getAccessPoint(any(GetAccessPointRequest.class)))
+                .thenThrow(s3ControlException);
+
+        CallbackContext callbackContext = new CallbackContext();
+        callbackContext.setPropagated(true);
+        callbackContext.setStabilized(true);
+        callbackContext.setForcedDelayCount(4);
+        callbackContext.setStabilizationCount(2);
+
         final ProgressEvent<ResourceModel, CallbackContext> progress =
-                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                handler.handleRequest(proxy, request, callbackContext, proxyClient, logger);
 
         assertThat(progress).isNotNull();
         assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -95,6 +150,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(progress.getErrorCode()).isNull();
 
         verify(proxyClient.client()).deleteAccessPoint(any(DeleteAccessPointRequest.class));
+        verify(proxyClient.client(), times(1)).getAccessPoint(any(GetAccessPointRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
     }
 

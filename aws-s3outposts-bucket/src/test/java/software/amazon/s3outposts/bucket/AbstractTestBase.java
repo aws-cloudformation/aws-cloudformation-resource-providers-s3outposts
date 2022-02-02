@@ -29,16 +29,16 @@ public class AbstractTestBase {
     protected static final String ARN;
     // Tagging
     protected static final Tag TAG1, TAG2;
-    protected static final S3Tag S3TAG1, S3TAG2;
-    protected static final List<Tag> TAG_LIST;
+    protected static final S3Tag S3TAG1, S3TAG2, S3TAG3;
+    protected static final Set<Tag> TAG_LIST;
     protected static final Map<String, String> TAG_MAP;
-    protected static final List<S3Tag> S3TAG_LIST;
+    protected static final Set<S3Tag> S3TAG_LIST1, S3TAG_LIST2;
     // LifecycleConfiguration
     protected static final FilterTag FILTER_TAG1, FILTER_TAG2;
     protected static final Rule RULE1, RULE2, RULE3, RULE4, RULE5, RULE6, RULE7, RULE8, RULE9;
     protected static final LifecycleRule LIFECYCLE_RULE1, LIFECYCLE_RULE2, LIFECYCLE_RULE3, LIFECYCLE_RULE4, LIFECYCLE_RULE5,
             LIFECYCLE_RULE6, LIFECYCLE_RULE7, LIFECYCLE_RULE8, LIFECYCLE_RULE9;
-    protected static final List<Rule> RULE_LIST, RULE_LIST1, RULE_LIST2;
+    protected static final Set<Rule> RULE_LIST, RULE_LIST1, RULE_LIST2;
     protected static final List<LifecycleRule> LIFECYCLE_RULE_LIST, LIFECYCLE_RULE_LIST1, LIFECYCLE_RULE_LIST2;
 
     // mock values used for testing purposes only.
@@ -54,11 +54,13 @@ public class AbstractTestBase {
         TAG2 = Tag.builder().key("key2").value(ARN).build();
         S3TAG1 = S3Tag.builder().key("key1").value("value1").build();
         S3TAG2 = S3Tag.builder().key("key2").value(ARN).build();
-        TAG_LIST = new ArrayList<Tag>() {{
+        S3TAG3 = S3Tag.builder().key("aws:cloudformation:key3").value("value3").build();
+        TAG_LIST = new HashSet<Tag>() {{
             add(TAG1);
             add(TAG2);
         }};
-        S3TAG_LIST = Arrays.asList(S3TAG1, S3TAG2);
+        S3TAG_LIST1 = new HashSet<>(Arrays.asList(S3TAG1, S3TAG2));
+        S3TAG_LIST2 = new HashSet<>(Arrays.asList(S3TAG1, S3TAG2, S3TAG3));
         TAG_MAP = new HashMap<String, String>() {{
             put(TAG1.getKey(), TAG1.getValue());
             put(TAG2.getKey(), TAG2.getValue());
@@ -93,14 +95,14 @@ public class AbstractTestBase {
         RULE6 = Rule.builder()
                 .expirationInDays(4)
                 .filter(Filter.builder().andOperator(
-                        FilterAndOperator.builder().prefix("k").tags(Arrays.asList(FILTER_TAG1, FILTER_TAG2)).build())
+                        FilterAndOperator.builder().prefix("k").tags(new HashSet<>(Arrays.asList(FILTER_TAG1, FILTER_TAG2))).build())
                         .build())
                 .status("Disabled")
                 .build();
         RULE7 = Rule.builder()
                 .expirationInDays(4)
                 .filter(Filter.builder().andOperator(
-                        FilterAndOperator.builder().tags(Arrays.asList(FILTER_TAG1, FILTER_TAG2)).build())
+                        FilterAndOperator.builder().tags(new HashSet<>(Arrays.asList(FILTER_TAG1, FILTER_TAG2))).build())
                         .build())
                 .status("Enabled")
                 .build();
@@ -108,7 +110,7 @@ public class AbstractTestBase {
         RULE8 = Rule.builder()
                 .id("8")
                 .filter(Filter.builder().andOperator(
-                        FilterAndOperator.builder().prefix("k").tags(Arrays.asList(FILTER_TAG1)).build())
+                        FilterAndOperator.builder().prefix("k").tags(new HashSet<>(Arrays.asList(FILTER_TAG1))).build())
                         .build())
                 .build();
         // Invalid rule: missing abortIncompleteMultipartUpload or expiration
@@ -145,14 +147,14 @@ public class AbstractTestBase {
         LIFECYCLE_RULE6 = LifecycleRule.builder()
                 .expiration(LifecycleExpiration.builder().days(4).build())
                 .filter(LifecycleRuleFilter.builder().and(
-                        LifecycleRuleAndOperator.builder().prefix("k").tags(S3TAG_LIST).build())
+                        LifecycleRuleAndOperator.builder().prefix("k").tags(S3TAG_LIST1).build())
                         .build())
                 .status("Disabled")
                 .build();
         LIFECYCLE_RULE7 = LifecycleRule.builder()
                 .expiration(LifecycleExpiration.builder().days(4).build())
                 .filter(LifecycleRuleFilter.builder().and(
-                        LifecycleRuleAndOperator.builder().tags(S3TAG_LIST).build())
+                        LifecycleRuleAndOperator.builder().tags(S3TAG_LIST1).build())
                         .build())
                 .status("Enabled")
                 .build();
@@ -167,7 +169,7 @@ public class AbstractTestBase {
                 .status("Enabled")
                 .build();
 
-        RULE_LIST = new ArrayList<Rule>() {{
+        RULE_LIST = new HashSet<Rule>() {{
             add(RULE1);
             add(RULE2);
             add(RULE3);
@@ -182,8 +184,8 @@ public class AbstractTestBase {
         LIFECYCLE_RULE_LIST = Arrays.asList(LIFECYCLE_RULE1, LIFECYCLE_RULE2, LIFECYCLE_RULE3, LIFECYCLE_RULE4,
                 LIFECYCLE_RULE5, LIFECYCLE_RULE6, LIFECYCLE_RULE7, LIFECYCLE_RULE8, LIFECYCLE_RULE9);
 
-        RULE_LIST1 = Arrays.asList(RULE1, RULE2, RULE3, RULE4);
-        RULE_LIST2 = Arrays.asList(RULE4, RULE5, RULE6, RULE7);
+        RULE_LIST1 = new HashSet<>(Arrays.asList(RULE1, RULE2, RULE3, RULE4));
+        RULE_LIST2 = new HashSet<>(Arrays.asList(RULE4, RULE5, RULE6, RULE7));
         LIFECYCLE_RULE_LIST1 = Arrays.asList(LIFECYCLE_RULE1, LIFECYCLE_RULE2, LIFECYCLE_RULE3, LIFECYCLE_RULE4);
         LIFECYCLE_RULE_LIST2 = Arrays.asList(LIFECYCLE_RULE4, LIFECYCLE_RULE5, LIFECYCLE_RULE6, LIFECYCLE_RULE7);
 
@@ -199,7 +201,7 @@ public class AbstractTestBase {
     protected static final ResourceModel REQ_BUCKET_MODEL_EMPTY_TAGS = ResourceModel.builder()
             .bucketName(BUCKET_NAME)
             .outpostId(OUTPOST_ID)
-            .tags(Collections.emptyList())
+            .tags(Collections.emptySet())
             .build();
 
     protected static final ResourceModel REQ_BUCKET_MODEL_WITH_TAGS = ResourceModel.builder()
@@ -217,7 +219,7 @@ public class AbstractTestBase {
     protected static final ResourceModel REQ_BUCKET_MODEL_EMPTY_RULES = ResourceModel.builder()
             .bucketName(BUCKET_NAME)
             .outpostId(OUTPOST_ID)
-            .lifecycleConfiguration(LifecycleConfiguration.builder().rules(Collections.emptyList()).build())
+            .lifecycleConfiguration(LifecycleConfiguration.builder().rules(Collections.emptySet()).build())
             .build();
 
     protected static final ResourceModel REQ_BUCKET_MODEL_RULES = ResourceModel.builder()
@@ -253,7 +255,7 @@ public class AbstractTestBase {
             .arn(ARN)
             .bucketName(BUCKET_NAME)
             .outpostId(OUTPOST_ID)
-            .tags(Collections.emptyList())
+            .tags(Collections.emptySet())
             .build();
 
     protected static final ResourceModel BUCKET_MODEL_WITH_TAGS = ResourceModel.builder()
@@ -274,15 +276,15 @@ public class AbstractTestBase {
             .arn(ARN)
             .bucketName(BUCKET_NAME)
             .outpostId(OUTPOST_ID)
-            .lifecycleConfiguration(LifecycleConfiguration.builder().rules(Collections.emptyList()).build())
+            .lifecycleConfiguration(LifecycleConfiguration.builder().rules(Collections.emptySet()).build())
             .build();
 
     protected static final ResourceModel BUCKET_MODEL_EMPTY_TAGS_AND_RULES = ResourceModel.builder()
             .arn(ARN)
             .bucketName(BUCKET_NAME)
             .outpostId(OUTPOST_ID)
-            .tags(Collections.emptyList())
-            .lifecycleConfiguration(LifecycleConfiguration.builder().rules(Collections.emptyList()).build())
+            .tags(Collections.emptySet())
+            .lifecycleConfiguration(LifecycleConfiguration.builder().rules(Collections.emptySet()).build())
             .build();
 
     protected static final ResourceModel BUCKET_MODEL_RULES = ResourceModel.builder()

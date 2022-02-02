@@ -17,7 +17,9 @@ public class DeleteHandler extends BaseHandlerStd {
 
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
-
+        if (callbackContext.getStabilizationCount() == 0) {
+            callbackContext.setStabilizationCount(MAX_STABILIZATION_RETRIES);
+        }
         // Expecting customer to only provide Arn
         if (model == null || StringUtils.isNullOrEmpty(model.getArn())) {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, ACCESSPOINT_ARN_REQD);
@@ -26,7 +28,9 @@ public class DeleteHandler extends BaseHandlerStd {
         logger.log(String.format("%s::DeleteHandler called for arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
 
         return ProgressEvent.progress(model, callbackContext)
-                .then(progress -> deleteAccessPoint(proxy, proxyClient, request, progress, logger));
+                .then(progress -> deleteAccessPoint(proxy, proxyClient, request, progress, logger))
+                .then(progress -> BaseHandlerStd.propagate(progress, logger))
+                .then(progress -> ProgressEvent.defaultSuccessHandler(null));
     }
 
     /**
@@ -57,6 +61,23 @@ public class DeleteHandler extends BaseHandlerStd {
                 .makeServiceCall((deleteAccessPointRequest, s3ControlProxyClient) ->
                         s3ControlProxyClient.injectCredentialsAndInvokeV2(deleteAccessPointRequest, s3ControlProxyClient.client()::deleteAccessPoint)
                 )
+                .stabilize((deleteAccessPointRequest, deleteAccessPointResponse, s3ControlProxyClient, resourceModel, cbContext) -> {
+                    if(cbContext.stabilizationCount == 0) {
+                        logger.log(MAX_RETRY_ATTEMPTS);
+                        return true;
+                    }
+                    logger.log(String.format("Stabilization retries remaining: %d", cbContext.getStabilizationCount()));
+                    ProgressEvent<ResourceModel, CallbackContext> prog = getAccessPoint(proxy, proxyClient, request, resourceModel, cbContext, logger);
+                    if(prog.isFailed() && prog.getErrorCode().equals(HandlerErrorCode.NotFound)) {
+                        logger.log(String.format("AccessPoint ARN: %s is Deleting", resourceModel.getArn()));
+                        cbContext.setStabilized(true);
+                    } else {
+                        logger.log(String.format("AccessPoint ARN: %s is not yet Deleting", resourceModel.getArn()));
+                        cbContext.setStabilized(false);
+                    }
+                    cbContext.stabilizationCount--;
+                    return cbContext.stabilized;
+                })
                 .handleError((deleteAccessPointRequest, exception, s3ControlProxyClient, resourceModel, cbContext) -> {
                     if (exception instanceof S3ControlException && ((S3ControlException) exception).statusCode() == 400 &&
                             ((S3ControlException) exception).awsErrorDetails().errorCode().equals(INVALID_REQUEST) &&
@@ -69,7 +90,7 @@ public class DeleteHandler extends BaseHandlerStd {
                     return handleError(deleteAccessPointRequest, exception, s3ControlProxyClient, resourceModel, cbContext);
 
                 })
-                .done(deleteAccessPointResponse -> ProgressEvent.defaultSuccessHandler(null));
+                .progress();
     }
 
 }
