@@ -16,7 +16,9 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -32,13 +34,16 @@ public class AbstractTestBase {
     protected static final String ARN1, ARN2;
     protected static final String CIDR_BLOCK1, CIDR_BLOCK2;
     protected static final String CREATION_TIME1, CREATION_TIME2;
+    protected static final String ACCESS_TYPE1, ACCESS_TYPE2, ACCESS_TYPE3, ACCESS_TYPE4;
+    protected static final String COIP_POOL1;
+    protected static final Integer NUMBER_OF_STABILIZATION_RETRIES;
     protected static final NetworkInterface NETWORK_INTERFACE_ID1_1, NETWORK_INTERFACE_ID1_2;
     protected static final NetworkInterface NETWORK_INTERFACE_ID2_1, NETWORK_INTERFACE_ID2_2;
     protected static final List<NetworkInterface> NETWORK_INTERFACE_LIST1, NETWORK_INTERFACE_LIST2;
     protected static final software.amazon.s3outposts.endpoint.NetworkInterface
             MODEL_NETWORK_INTERFACE_ID1_1, MODEL_NETWORK_INTERFACE_ID1_2,
             MODEL_NETWORK_INTERFACE_ID2_1, MODEL_NETWORK_INTERFACE_ID2_2;
-    protected static final List<software.amazon.s3outposts.endpoint.NetworkInterface>
+    protected static final Set<software.amazon.s3outposts.endpoint.NetworkInterface>
             MODEL_NETWORK_INTERFACE_LIST1, MODEL_NETWORK_INTERFACE_LIST2;
 
     // mock values used for testing purposes only
@@ -58,6 +63,12 @@ public class AbstractTestBase {
         CIDR_BLOCK2 = "172.32.0.0/16";
         CREATION_TIME1 = "2020-01-01T10:00:00Z";
         CREATION_TIME2 = "2020-01-02T10:00:00Z";
+        ACCESS_TYPE1 = "Private";
+        ACCESS_TYPE2 = "CustomerOwnedIp";
+        ACCESS_TYPE3 = "PRIVATE";
+        ACCESS_TYPE4 = "TestAccessType";
+        COIP_POOL1 = "ipv4pool-coip-11111111111111111";
+        NUMBER_OF_STABILIZATION_RETRIES = 1;
         NETWORK_INTERFACE_ID1_1 = NetworkInterface.builder().networkInterfaceId("eni-00abcd1234567e89f").build();
         NETWORK_INTERFACE_ID1_2 = NetworkInterface.builder().networkInterfaceId("eni-01abcd2345678e90f").build();
         NETWORK_INTERFACE_ID2_1 = NetworkInterface.builder().networkInterfaceId("eni-02abcd1234567e89f").build();
@@ -71,9 +82,8 @@ public class AbstractTestBase {
         MODEL_NETWORK_INTERFACE_ID2_1 = software.amazon.s3outposts.endpoint.NetworkInterface.builder().networkInterfaceId("eni-02abcd1234567e89f").build();
         MODEL_NETWORK_INTERFACE_ID2_2 = software.amazon.s3outposts.endpoint.NetworkInterface.builder().networkInterfaceId("eni-03abcd2345678e90f").build();
 
-        MODEL_NETWORK_INTERFACE_LIST1 = Arrays.asList(MODEL_NETWORK_INTERFACE_ID1_1, MODEL_NETWORK_INTERFACE_ID1_2);
-        MODEL_NETWORK_INTERFACE_LIST2 = Arrays.asList(MODEL_NETWORK_INTERFACE_ID2_1, MODEL_NETWORK_INTERFACE_ID2_2);
-
+        MODEL_NETWORK_INTERFACE_LIST1 = new HashSet<>(Arrays.asList(MODEL_NETWORK_INTERFACE_ID1_1, MODEL_NETWORK_INTERFACE_ID1_2));
+        MODEL_NETWORK_INTERFACE_LIST2 = new HashSet<>(Arrays.asList(MODEL_NETWORK_INTERFACE_ID2_1, MODEL_NETWORK_INTERFACE_ID2_2));
 
     }
 
@@ -85,6 +95,9 @@ public class AbstractTestBase {
             .networkInterfaces(NETWORK_INTERFACE_LIST1)
             .outpostsId(OUTPOST_ID)
             .status("Available")
+            .accessType(ACCESS_TYPE1)
+            .subnetId(SUBNET_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
             .build();
 
     protected ResourceModel model1 = ResourceModel.builder()
@@ -94,6 +107,9 @@ public class AbstractTestBase {
             .networkInterfaces(MODEL_NETWORK_INTERFACE_LIST1)
             .outpostId(OUTPOST_ID)
             .status("Available")
+            .accessType(ACCESS_TYPE1)
+            .subnetId(SUBNET_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
             .build();
 
     protected Endpoint endpoint2 = Endpoint.builder()
@@ -102,7 +118,11 @@ public class AbstractTestBase {
             .creationTime(Instant.parse(CREATION_TIME2))
             .networkInterfaces(NETWORK_INTERFACE_LIST2)
             .outpostsId(OUTPOST_ID)
-            .status("Pending")
+            .status("Available")
+            .accessType(ACCESS_TYPE2)
+            .customerOwnedIpv4Pool(COIP_POOL1)
+            .subnetId(SUBNET_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
             .build();
 
     protected ResourceModel model2 = ResourceModel.builder()
@@ -111,16 +131,81 @@ public class AbstractTestBase {
             .creationTime(CREATION_TIME2)
             .networkInterfaces(MODEL_NETWORK_INTERFACE_LIST2)
             .outpostId(OUTPOST_ID)
-            .status("Pending")
+            .status("Available")
+            .accessType(ACCESS_TYPE2)
+            .customerOwnedIpv4Pool(COIP_POOL1)
+            .subnetId(SUBNET_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
             .build();
 
+    protected Endpoint endpoint3 = Endpoint.builder()
+            .endpointArn(ARN1)
+            .cidrBlock(CIDR_BLOCK1)
+            .creationTime(Instant.parse(CREATION_TIME1))
+            .networkInterfaces(NETWORK_INTERFACE_LIST1)
+            .outpostsId(OUTPOST_ID)
+            .status("Pending")
+            .accessType(ACCESS_TYPE1)
+            .subnetId(SUBNET_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .build();
+
+    protected Endpoint endpoint4 = Endpoint.builder()
+            .endpointArn(ARN2)
+            .cidrBlock(CIDR_BLOCK2)
+            .creationTime(Instant.parse(CREATION_TIME2))
+            .networkInterfaces(NETWORK_INTERFACE_LIST2)
+            .outpostsId(OUTPOST_ID)
+            .status("Invalid")
+            .accessType(ACCESS_TYPE2)
+            .customerOwnedIpv4Pool(COIP_POOL1)
+            .subnetId(SUBNET_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .build();
+
+    protected Endpoint endpoint5 = Endpoint.builder()
+            .endpointArn(ARN1)
+            .cidrBlock(CIDR_BLOCK1)
+            .creationTime(Instant.parse(CREATION_TIME1))
+            .networkInterfaces(NETWORK_INTERFACE_LIST1)
+            .outpostsId(OUTPOST_ID)
+            .status("Deleting")
+            .accessType(ACCESS_TYPE1)
+            .subnetId(SUBNET_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .build();
     // Request Models
 
     protected static final ResourceModel REQ_MODEL_EMPTY = ResourceModel.builder().build();
-    protected static final ResourceModel REQ_MODEL_CREATE = ResourceModel.builder()
+    protected static final ResourceModel REQ_MODEL_MIN_INPUT_CREATE = ResourceModel.builder()
             .outpostId(OUTPOST_ID)
             .securityGroupId(SECURITY_GROUP_ID)
             .subnetId(SUBNET_ID)
+            .build();
+    protected static final ResourceModel REQ_MODEL_COIP_INPUT_CREATE = ResourceModel.builder()
+            .outpostId(OUTPOST_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .subnetId(SUBNET_ID)
+            .accessType(ACCESS_TYPE2)
+            .customerOwnedIpv4Pool(COIP_POOL1)
+            .build();
+    protected static final ResourceModel REQ_MODEL_INVALID_ACCESS_TYPE_CREATE1 = ResourceModel.builder()
+            .outpostId(OUTPOST_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .subnetId(SUBNET_ID)
+            .accessType(ACCESS_TYPE3)
+            .build();
+    protected static final ResourceModel REQ_MODEL_INVALID_ACCESS_TYPE_CREATE2 = ResourceModel.builder()
+            .outpostId(OUTPOST_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .subnetId(SUBNET_ID)
+            .accessType(ACCESS_TYPE4)
+            .build();
+    protected static final ResourceModel REQ_MODEL_INVALID_COIP_CREATE = ResourceModel.builder()
+            .outpostId(OUTPOST_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .subnetId(SUBNET_ID)
+            .accessType(ACCESS_TYPE2)
             .build();
     protected static final ResourceModel REQ_MODEL_ARN = ResourceModel.builder()
             .arn(ARN1)
@@ -131,12 +216,26 @@ public class AbstractTestBase {
 
     // Response Models
 
-    protected static final ResourceModel RESP_MODEL_CREATE = ResourceModel.builder()
+    protected static final ResourceModel RESP_MODEL_MIN_INPUT_CREATE = ResourceModel.builder()
             .arn(ARN1)
             .id(ID1)
             .outpostId(OUTPOST_ID)
             .securityGroupId(SECURITY_GROUP_ID)
             .subnetId(SUBNET_ID)
+            .accessType(ACCESS_TYPE1)
+            .build();
+    protected static final ResourceModel RESP_MODEL_COIP_INPUT_CREATE = ResourceModel.builder()
+            .arn(ARN1)
+            .id(ID1)
+            .outpostId(OUTPOST_ID)
+            .securityGroupId(SECURITY_GROUP_ID)
+            .subnetId(SUBNET_ID)
+            .accessType(ACCESS_TYPE2)
+            .customerOwnedIpv4Pool(COIP_POOL1)
+            .build();
+
+    protected static final CallbackContext FAILURE_CREATE_CALLBACK_CONTEXT = CallbackContext.builder()
+            .stabilizationRetriesRemaining(NUMBER_OF_STABILIZATION_RETRIES)
             .build();
 
     protected static Exception constructS3OutpostsExceptionWithStatusCode(Integer statusCode) {

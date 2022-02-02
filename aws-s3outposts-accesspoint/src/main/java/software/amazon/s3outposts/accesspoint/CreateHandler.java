@@ -2,6 +2,7 @@ package software.amazon.s3outposts.accesspoint;
 
 import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.s3control.S3ControlClient;
+import software.amazon.awssdk.services.s3control.model.S3ControlException;
 import software.amazon.cloudformation.proxy.*;
 
 
@@ -17,7 +18,6 @@ public class CreateHandler extends BaseHandlerStd {
 
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
-
         // Expecting the customer to provide 3 parameters: Bucket (arn), Name (AccessPoint name) and VpcConfiguration.
         if (model == null || StringUtils.isNullOrEmpty(model.getBucket())) {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, BUCKET_ARN_REQD);

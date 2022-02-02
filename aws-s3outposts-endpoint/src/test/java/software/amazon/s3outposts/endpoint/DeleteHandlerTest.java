@@ -7,13 +7,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.s3outposts.S3OutpostsClient;
-import software.amazon.awssdk.services.s3outposts.model.DeleteEndpointRequest;
-import software.amazon.awssdk.services.s3outposts.model.DeleteEndpointResponse;
+import software.amazon.awssdk.services.s3outposts.model.*;
+import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.*;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -57,11 +59,11 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, logger);
+                = handler.handleRequest(proxy, request, new CallbackContext(false, NUMBER_OF_STABILIZATION_RETRIES), logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isEqualToComparingFieldByField(new CallbackContext());
+        assertThat(response.getCallbackContext()).isEqualToComparingFieldByField(FAILURE_CREATE_CALLBACK_CONTEXT);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isEqualTo("Endpoint ARN is required.");
@@ -81,6 +83,13 @@ public class DeleteHandlerTest extends AbstractTestBase {
         final DeleteEndpointResponse deleteEndpointResponse = DeleteEndpointResponse.builder().build();
         when(proxyClient.client().deleteEndpoint(any(DeleteEndpointRequest.class))).thenReturn(deleteEndpointResponse);
 
+        final ListEndpointsResponse listEndpointsResponse =
+                ListEndpointsResponse.builder()
+                        .endpoints(Collections.singletonList(endpoint2))
+                        .nextToken(null)
+                        .build();
+
+        when(proxyClient.client().listEndpoints(any(ListEndpointsRequest.class))).thenReturn(listEndpointsResponse);
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
@@ -93,6 +102,112 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(progress.getMessage()).isNull();
         assertThat(progress.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).deleteEndpoint(any(DeleteEndpointRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Happy Path - Re-entry on stabilize function
+     */
+    @Test
+    public void handleRequest_Success_Stabilized() {
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_MODEL_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final DeleteEndpointResponse deleteEndpointResponse = DeleteEndpointResponse.builder().build();
+        when(proxyClient.client().deleteEndpoint(any(DeleteEndpointRequest.class))).thenReturn(deleteEndpointResponse);
+
+        final ListEndpointsResponse listEndpointsResponse =
+                ListEndpointsResponse.builder()
+                        .endpoints(Collections.singletonList(endpoint2))
+                        .nextToken(null)
+                        .build();
+
+        when(proxyClient.client().listEndpoints(any(ListEndpointsRequest.class))).thenReturn(listEndpointsResponse);
+
+        CallbackContext context = new CallbackContext();
+        context.setStabilized(true);
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, context, proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isEqualTo(null);
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isNull();
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).deleteEndpoint(any(DeleteEndpointRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * Max Retries reached waiting for Resource to stabilize
+     */
+    @Test
+    public void handleRequest_MaxRetryAttempts_Success() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_MODEL_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final DeleteEndpointResponse deleteEndpointResponse = DeleteEndpointResponse.builder().build();
+        when(proxyClient.client().deleteEndpoint(any(DeleteEndpointRequest.class))).thenReturn(deleteEndpointResponse);
+
+        final ListEndpointsResponse listEndpointsResponse =
+                ListEndpointsResponse.builder()
+                        .endpoints(Collections.singletonList(endpoint5))
+                        .nextToken(null)
+                        .build();
+
+        when(proxyClient.client().listEndpoints(any(ListEndpointsRequest.class))).thenReturn(listEndpointsResponse);
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(false, NUMBER_OF_STABILIZATION_RETRIES), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isEqualTo(null);
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isNull();
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).deleteEndpoint(any(DeleteEndpointRequest.class));
+        verify(proxyClient.client(), times(NUMBER_OF_STABILIZATION_RETRIES)).listEndpoints(any(ListEndpointsRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
+
+    }
+
+    /**
+     * CFNStabilizationException when Read Handler fails for an error other than 404 Not Found.
+     */
+    @Test
+    public void handleRequest_InvalidResponseStatus_StabilizedException() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_MODEL_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final DeleteEndpointResponse deleteEndpointResponse = DeleteEndpointResponse.builder().build();
+        when(proxyClient.client().deleteEndpoint(any(DeleteEndpointRequest.class))).thenReturn(deleteEndpointResponse);
+
+        when(proxyClient.client().listEndpoints(any(ListEndpointsRequest.class))).thenThrow(S3OutpostsException.builder().statusCode(403).build());
+
+        Exception exception = assertThrows(
+                CfnNotStabilizedException.class,
+                () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger)
+        );
+        assertThat(exception.getMessage()).contains("did not stabilize.");
         verify(proxyClient.client()).deleteEndpoint(any(DeleteEndpointRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
 

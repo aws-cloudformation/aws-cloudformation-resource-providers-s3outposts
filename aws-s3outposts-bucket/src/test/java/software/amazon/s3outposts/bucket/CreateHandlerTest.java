@@ -271,7 +271,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
         when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
 
-        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST).build();
+        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST1).build();
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
 
         when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
@@ -675,7 +675,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         S3Tag sysS3Tag1 = S3Tag.builder().key("aws:key1").value("value1").build();
         S3Tag sysS3Tag2 = S3Tag.builder().key("AWS:key2").value(ARN).build();
 
-        List<Tag> allTagList = new ArrayList<Tag>() {{
+        Set<Tag> allTagSet = new HashSet<Tag>() {{
             add(TAG1);
             add(TAG2);
             add(sysTag1);
@@ -692,7 +692,7 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .arn(ARN)
                 .bucketName(BUCKET_NAME)
                 .outpostId(OUTPOST_ID)
-                .tags(allTagList)
+                .tags(allTagSet)
                 .build();
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -981,7 +981,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
         when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
 
-        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST).build();
+        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST1).build();
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
 
         final GetBucketLifecycleConfigurationResponse getBucketLifecycleConfigurationResponse =

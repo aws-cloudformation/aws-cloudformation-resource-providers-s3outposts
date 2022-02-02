@@ -182,7 +182,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         CallbackContext context = new CallbackContext();
         context.setStabilized(true);
         context.setPropagated(true);
-        context.setForcedDelayCount(2);
+        context.setForcedDelayCount(4);
 
         final PutAccessPointPolicyResponse putAPPolicyResponse = PutAccessPointPolicyResponse.builder().build();
         when(proxyClient.client().putAccessPointPolicy(any(PutAccessPointPolicyRequest.class))).thenReturn(putAPPolicyResponse);
@@ -236,7 +236,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         CallbackContext context = new CallbackContext();
         context.setStabilized(true);
         context.setPropagated(true);
-        context.setForcedDelayCount(2);
+        context.setForcedDelayCount(4);
 
         final GetAccessPointResponse getAccessPointResponse = GetAccessPointResponse.builder()
                 .bucket(BUCKET_NAME)
@@ -348,7 +348,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         CallbackContext context = new CallbackContext();
         context.setStabilized(true);
         context.setPropagated(true);
-        context.setForcedDelayCount(2);
+        context.setForcedDelayCount(4);
 
         final ProgressEvent<ResourceModel, CallbackContext> progress =
                 handler.handleRequest(proxy, request, context, proxyClient, logger);
@@ -385,7 +385,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         CallbackContext context = new CallbackContext();
         context.setStabilized(true);
         context.setPropagated(true);
-        context.setForcedDelayCount(2);
+        context.setForcedDelayCount(4);
 
         when(proxyClient.client().putAccessPointPolicy(any(PutAccessPointPolicyRequest.class)))
                 .thenThrow(constructS3ControlException("AccessDenied"));

@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.s3outposts.model.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Translator {
@@ -20,10 +21,14 @@ public class Translator {
      */
     static CreateEndpointRequest translateToSdkCreateEndpointRequest(final ResourceModel model) {
 
+        final EndpointAccessType endpointAccessType = EndpointAccessType.fromValue(model.getAccessType());
+
         return CreateEndpointRequest.builder()
                 .outpostId(model.getOutpostId())
                 .securityGroupId(model.getSecurityGroupId())
                 .subnetId(model.getSubnetId())
+                .accessType(endpointAccessType)
+                .customerOwnedIpv4Pool(model.getCustomerOwnedIpv4Pool())
                 .build();
 
     }
@@ -72,11 +77,33 @@ public class Translator {
                 .networkInterfaces(translateFromSdkNetworkInterfaces(endpoint.networkInterfaces()))
                 .outpostId(endpoint.outpostsId())
                 .status(endpoint.statusAsString())
+                .accessType(endpoint.accessTypeAsString())
+                .customerOwnedIpv4Pool(endpoint.customerOwnedIpv4Pool())
+                .subnetId(endpoint.subnetId())
+                .securityGroupId(endpoint.securityGroupId())
                 .build();
 
     }
 
-    static List<software.amazon.s3outposts.endpoint.NetworkInterface> translateFromSdkNetworkInterfaces(
+    static ResourceModel translateFromSdkEc2Endpoint(final Endpoint endpoint, final String outpostId) {
+
+        final String arn = endpoint.endpointArn().replaceFirst("/ec2/", String.format("/%s/", outpostId));
+        return ResourceModel.builder()
+                .arn(arn)
+                .cidrBlock(endpoint.cidrBlock())
+                .creationTime(endpoint.creationTime().toString())
+                .networkInterfaces(translateFromSdkNetworkInterfaces(endpoint.networkInterfaces()))
+                .outpostId(outpostId)
+                .status(endpoint.statusAsString())
+                .accessType(endpoint.accessTypeAsString())
+                .customerOwnedIpv4Pool(endpoint.customerOwnedIpv4Pool())
+                .subnetId(endpoint.subnetId())
+                .securityGroupId(endpoint.securityGroupId())
+                .build();
+
+    }
+
+    static Set<software.amazon.s3outposts.endpoint.NetworkInterface> translateFromSdkNetworkInterfaces(
             List<NetworkInterface> networkInterfaceList) {
 
         return Optional.ofNullable(networkInterfaceList).orElse(Collections.emptyList())
@@ -84,7 +111,7 @@ public class Translator {
                 .map(networkInterface -> software.amazon.s3outposts.endpoint.NetworkInterface.builder()
                         .networkInterfaceId(networkInterface.networkInterfaceId())
                         .build())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
 }
