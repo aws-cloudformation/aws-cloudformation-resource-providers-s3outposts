@@ -32,41 +32,6 @@ public class ReadHandler extends BaseHandlerStd {
     }
 
 
-    /**
-     * Calls the API getAccessPoint
-     * Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/S3ControlClient.html#getAccessPoint-software.amazon.awssdk.services.s3control.model.GetAccessPointRequest-
-     *
-     * @param proxy
-     * @param proxyClient
-     * @param request
-     * @param model
-     * @param callbackContext
-     * @param logger
-     * @return
-     */
-    private ProgressEvent<ResourceModel, CallbackContext> getAccessPoint(
-            AmazonWebServicesClientProxy proxy,
-            ProxyClient<S3ControlClient> proxyClient,
-            ResourceHandlerRequest<ResourceModel> request,
-            ResourceModel model,
-            CallbackContext callbackContext,
-            Logger logger) {
-
-        logger.log(String.format("%s::Read::GetAccessPoint - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
-        return proxy.initiate("AWS-S3Outposts-AccessPoint::Read::GetAccessPoint", proxyClient, model, callbackContext)
-                // Form GetAccessPointRequest
-                .translateToServiceRequest(resourceModel -> Translator.translateToGetAPRequest(resourceModel, request.getAwsAccountId()))
-                // Issue call getAccessPoint
-                .makeServiceCall((getAPRequest, s3ControlProxyClient) ->
-                        s3ControlProxyClient.injectCredentialsAndInvokeV2(getAPRequest, s3ControlProxyClient.client()::getAccessPoint)
-                )
-                .handleError(this::handleError)
-                .done(getAPResponse -> {
-                    final ResourceModel getAPResponseModel = Translator.translateFromGetAPResponse(getAPResponse, model);
-                    return ProgressEvent.progress(getAPResponseModel, callbackContext);
-                });
-
-    }
 
     /**
      * Calls the API getAccessPointPolicy

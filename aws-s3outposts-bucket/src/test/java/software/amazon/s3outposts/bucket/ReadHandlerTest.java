@@ -123,7 +123,7 @@ public class ReadHandlerTest extends AbstractTestBase {
         final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
         when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
 
-        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST).build();
+        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST1).build();
         when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
 
         when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
@@ -465,6 +465,39 @@ public class ReadHandlerTest extends AbstractTestBase {
         verify(proxyClient.client()).getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
 
+    }
+
+    @Test
+    public void handleRequest_IgnoreSystemTags() {
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(REQ_BUCKET_MODEL_ONLY_ARN)
+                .awsAccountId(ACCOUNT_ID)
+                .build();
+
+        final GetBucketResponse getBucketResponse = GetBucketResponse.builder().bucket(BUCKET_NAME).build();
+        when(proxyClient.client().getBucket(any(GetBucketRequest.class))).thenReturn(getBucketResponse);
+
+        final GetBucketTaggingResponse getBucketTaggingResponse = GetBucketTaggingResponse.builder().tagSet(S3TAG_LIST2).build();
+        when(proxyClient.client().getBucketTagging(any(GetBucketTaggingRequest.class))).thenReturn(getBucketTaggingResponse);
+
+        when(proxyClient.client().getBucketLifecycleConfiguration(any(GetBucketLifecycleConfigurationRequest.class)))
+                .thenThrow(constructS3ControlExceptionWithStatusCode(404));
+
+        final ProgressEvent<ResourceModel, CallbackContext> progress =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(progress).isNotNull();
+        assertThat(progress.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(progress.getCallbackContext()).isNull();
+        assertThat(progress.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(progress.getResourceModel()).isEqualTo(BUCKET_MODEL_WITH_TAGS);
+        assertThat(progress.getResourceModels()).isNull();
+        assertThat(progress.getMessage()).isNull();
+        assertThat(progress.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getBucket(any(GetBucketRequest.class));
+        verify(proxyClient.client()).getBucketTagging(any(GetBucketTaggingRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
 }

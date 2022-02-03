@@ -14,7 +14,9 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "Properties" : {
         "<a href="#outpostid" title="OutpostId">OutpostId</a>" : <i>String</i>,
         "<a href="#securitygroupid" title="SecurityGroupId">SecurityGroupId</a>" : <i>String</i>,
-        "<a href="#subnetid" title="SubnetId">SubnetId</a>" : <i>String</i>
+        "<a href="#subnetid" title="SubnetId">SubnetId</a>" : <i>String</i>,
+        "<a href="#accesstype" title="AccessType">AccessType</a>" : <i>String</i>,
+        "<a href="#customerownedipv4pool" title="CustomerOwnedIpv4Pool">CustomerOwnedIpv4Pool</a>" : <i>String</i>
     }
 }
 </pre>
@@ -27,6 +29,8 @@ Properties:
     <a href="#outpostid" title="OutpostId">OutpostId</a>: <i>String</i>
     <a href="#securitygroupid" title="SecurityGroupId">SecurityGroupId</a>: <i>String</i>
     <a href="#subnetid" title="SubnetId">SubnetId</a>: <i>String</i>
+    <a href="#accesstype" title="AccessType">AccessType</a>: <i>String</i>
+    <a href="#customerownedipv4pool" title="CustomerOwnedIpv4Pool">CustomerOwnedIpv4Pool</a>: <i>String</i>
 </pre>
 
 ## Properties
@@ -61,7 +65,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### SubnetId
 
-The ID of the subnet in the selected VPC.
+The ID of the subnet in the selected VPC. The subnet must belong to the Outpost.
 
 _Required_: Yes
 
@@ -72,6 +76,30 @@ _Minimum_: <code>1</code>
 _Maximum_: <code>100</code>
 
 _Pattern_: <code>^subnet-([0-9a-f]{8}|[0-9a-f]{17})$</code>
+
+_Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
+
+#### AccessType
+
+The type of access for the on-premise network connectivity for the Outpost endpoint. To access endpoint from an on-premises network, you must specify the access type and provide the customer owned Ipv4 pool.
+
+_Required_: No
+
+_Type_: String
+
+_Allowed Values_: <code>CustomerOwnedIp</code> | <code>Private</code>
+
+_Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
+
+#### CustomerOwnedIpv4Pool
+
+The ID of the customer-owned IPv4 pool for the Endpoint. IP addresses will be allocated from this pool for the endpoint.
+
+_Required_: No
+
+_Type_: String
+
+_Pattern_: <code>^ipv4pool-coip-([0-9a-f]{17})$</code>
 
 _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
 

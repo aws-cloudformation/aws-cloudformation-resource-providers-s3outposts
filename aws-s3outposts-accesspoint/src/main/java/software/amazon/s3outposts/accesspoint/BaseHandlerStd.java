@@ -29,6 +29,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
     // Constants
     protected static final int CALLBACK_DELAY_SECONDS = 20;
+    protected static final int MAX_STABILIZATION_RETRIES = 10;
+    protected static final String MAX_RETRY_ATTEMPTS = "Maximum number of Stabilization attempts reached. Returning SUCCESS.";
 
     @Override
     public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -100,7 +102,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
 
     /**
-     * Adds a total delay of 40s (CALLBACK_DELAY_SECONDS * forcedDelayCount) to allow the AccessPoint state
+     * Adds a total delay of 80s (CALLBACK_DELAY_SECONDS * forcedDelayCount) to allow the AccessPoint state
      * to transition from "Associated" to "Active".
      *
      * @param progressEvent
@@ -117,10 +119,46 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             return progressEvent;
         }
         callbackContext.forcedDelayCount++;
-        if (callbackContext.forcedDelayCount == 2) {
+        if (callbackContext.forcedDelayCount == 4) {
             callbackContext.setPropagated(true);
         }
         return ProgressEvent.defaultInProgressHandler(callbackContext, CALLBACK_DELAY_SECONDS, progressEvent.getResourceModel());
+
+    }
+
+    /**
+     * Calls the API getAccessPoint
+     * Ref: https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3control/S3ControlClient.html#getAccessPoint-software.amazon.awssdk.services.s3control.model.GetAccessPointRequest-
+     *
+     * @param proxy
+     * @param proxyClient
+     * @param request
+     * @param model
+     * @param callbackContext
+     * @param logger
+     * @return
+     */
+    protected ProgressEvent<ResourceModel, CallbackContext> getAccessPoint(
+            AmazonWebServicesClientProxy proxy,
+            ProxyClient<S3ControlClient> proxyClient,
+            ResourceHandlerRequest<ResourceModel> request,
+            ResourceModel model,
+            CallbackContext callbackContext,
+            Logger logger) {
+
+        logger.log(String.format("%s::Read::GetAccessPoint - arn: %s \n", ResourceModel.TYPE_NAME, model.getArn()));
+        return proxy.initiate("AWS-S3Outposts-AccessPoint::Read::GetAccessPoint", proxyClient, model, callbackContext)
+                // Form GetAccessPointRequest
+                .translateToServiceRequest(resourceModel -> Translator.translateToGetAPRequest(resourceModel, request.getAwsAccountId()))
+                // Issue call getAccessPoint
+                .makeServiceCall((getAPRequest, s3ControlProxyClient) ->
+                        s3ControlProxyClient.injectCredentialsAndInvokeV2(getAPRequest, s3ControlProxyClient.client()::getAccessPoint)
+                )
+                .handleError(this::handleError)
+                .done(getAPResponse -> {
+                    final ResourceModel getAPResponseModel = Translator.translateFromGetAPResponse(getAPResponse, model);
+                    return ProgressEvent.progress(getAPResponseModel, callbackContext);
+                });
 
     }
 

@@ -224,15 +224,16 @@ public class Translator {
      * @param s3TagList
      * @return
      */
-    static List<software.amazon.s3outposts.bucket.Tag> translateTagsFromSdk(final Collection<S3Tag> s3TagList) {
+    static Set<software.amazon.s3outposts.bucket.Tag> translateTagsFromSdk(final Collection<S3Tag> s3TagList) {
 
         return Optional.ofNullable(s3TagList).orElse(Collections.emptyList())
                 .stream()
+                .filter(tag -> !tag.key().startsWith("aws:cloudformation"))
                 .map(s3Tag -> software.amazon.s3outposts.bucket.Tag.builder()
                         .key(s3Tag.key())
                         .value(s3Tag.value())
                         .build())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
     }
 
@@ -301,7 +302,7 @@ public class Translator {
      * @param lifecycleRuleList
      * @return
      */
-    private static List<Rule> translateLifecycleRulesFromSdk(final Collection<LifecycleRule> lifecycleRuleList) {
+    private static Set<Rule> translateLifecycleRulesFromSdk(final Collection<LifecycleRule> lifecycleRuleList) {
 
         return Optional.ofNullable(lifecycleRuleList).orElse(Collections.emptyList())
                 .stream()
@@ -315,7 +316,7 @@ public class Translator {
                                 .status(lifecycleRule.statusAsString())
                                 .build()
                 )
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
     }
 
@@ -419,7 +420,7 @@ public class Translator {
      * @param s3TagList
      * @return
      */
-    private static List<FilterTag> translateFromSdkLifecycleRuleAndOperatorTags(List<S3Tag> s3TagList) {
+    private static Set<FilterTag> translateFromSdkLifecycleRuleAndOperatorTags(List<S3Tag> s3TagList) {
 
         return Optional.ofNullable(s3TagList).orElse(Collections.emptyList())
                 .stream()
@@ -427,7 +428,7 @@ public class Translator {
                         .key(s3Tag.key())
                         .value(s3Tag.value())
                         .build())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
     }
 
@@ -478,9 +479,9 @@ public class Translator {
      * @param rules
      * @return
      */
-    private static List<LifecycleRule> translateToSdkLifecycleRules(List<Rule> rules) {
+    private static Set<LifecycleRule> translateToSdkLifecycleRules(Set<Rule> rules) {
 
-        return Optional.ofNullable(rules).orElse(Collections.emptyList())
+        return Optional.ofNullable(rules).orElse(Collections.emptySet())
                 .stream()
                 .map(rule ->
                         LifecycleRule.builder()
@@ -492,7 +493,7 @@ public class Translator {
                                 .status(rule.getStatus())
                                 .build()
                 )
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
     }
 
@@ -611,18 +612,18 @@ public class Translator {
      * @param filterTagsList
      * @return
      */
-    private static List<S3Tag> translateToSdkLifecycleRuleAndOperatorTags(List<FilterTag> filterTagsList) {
+    private static Set<S3Tag> translateToSdkLifecycleRuleAndOperatorTags(Set<FilterTag> filterTagsList) {
 
         if (filterTagsList == null)
             return null;
 
-        return Optional.ofNullable(filterTagsList).orElse(Collections.emptyList())
+        return Optional.ofNullable(filterTagsList).orElse(Collections.emptySet())
                 .stream()
                 .map(filterTag -> S3Tag.builder()
                         .key(filterTag.getKey())
                         .value(filterTag.getValue())
                         .build())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
     }
 

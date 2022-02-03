@@ -36,6 +36,8 @@ public class AbstractTestBase {
     protected static final String ACCESSPOINT_POLICY;
     protected static final String ACCESSPOINT_POLICY2;
     protected static final String EMPTY_POLICY;
+    protected static final String NO_SUCH_ACCESSPOINT;
+    protected static final int STABILIZATION_COUNT;
 
     // mock values used for testing purposes only
     static {
@@ -54,6 +56,8 @@ public class AbstractTestBase {
         ACCESSPOINT_POLICY2 = String.format("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"st1\",\"Effect\":\"Allow\"," +
                 "\"Principal\":{\"AWS\":\"%s\"},\"Action\":\"s3-outposts:*\",\"Resource\":\"%s\"}]}", ACCOUNT_ID, ACCESSPOINT_ARN);
         EMPTY_POLICY = "{}";
+        NO_SUCH_ACCESSPOINT = "NoSuchAccessPoint";
+        STABILIZATION_COUNT = 10;
     }
 
     protected static final ResourceModel AP_COMPLETE_MODEL = ResourceModel.builder()
