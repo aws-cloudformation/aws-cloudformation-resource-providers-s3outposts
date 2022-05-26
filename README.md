@@ -4,14 +4,10 @@
 Using the S3 APIs and features, S3 on Outposts makes it easy to store, secure, tag, retrieve, report on, and control access to the data on your Outpost.
 
 This repository contains code to manage the following S3 on Outposts resource providers:
-* AWS::S3Outposts::Bucket
-* AWS::S3Outposts::BucketPolicy
-* AWS::S3Outposts::AccessPoint
-* AWS::S3Outposts::Endpoint
-
-> TODO:
-> Once the docs are updated [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html),
-> link the corresponding pages to the resource providers above.
+* [AWS::S3Outposts::Bucket](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-bucket.html)
+* [AWS::S3Outposts::BucketPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-bucketpolicy.html)
+* [AWS::S3Outposts::AccessPoint](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-accesspoint.html)
+* [AWS::S3Outposts::Endpoint](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-endpoint.html)
 
 ## Security
 
